@@ -2,5 +2,5 @@
     "app_name": "Speedrun Retimer",
     "author": "jerrinth3glitch#6280",
     "main_module": "src/main/python/main.py",
-    "version": "0.0.0"
+    "version": "1.3.1"
 }

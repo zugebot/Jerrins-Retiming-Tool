@@ -1,3 +1,4 @@
-save.json
+src/main/python.save.json
 target/
 .idea/
+appIcons/*
