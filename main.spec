@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['main.py'],
-             pathex=['C:\\Users\\jerrin\\PycharmProjects\\Retime'],
+             pathex=['C:\\Users\\jerrin\\PycharmProjects\\Speedrun-Retimer'],
              binaries=[],
              datas=[],
              hiddenimports=[],

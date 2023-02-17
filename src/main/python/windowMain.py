@@ -8,113 +8,153 @@ import requests
 import webbrowser
 
 # custom imports
-from jLineEdit import JLineEdit
+from support import *
 from row import Row
-from windowRetimer import RetimerWindow
-from windowEditModMessage import WindowEditModMessage
+from jLineEdit import JLineEdit
+from windowRetimer import WindowRetimer
+from windowSettings import WindowSettings
 
 
 
 class WindowMain(QMainWindow):
-    def __init__(self, version="1.0.0", *args, **kwargs):
+    def __init__(self, app, settings, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.app: QApplication = app
+        self.settings = settings
 
-        self.version: str = version
-        self.latestVersion: str = version
         self.latestUrl: str = ""
 
 
-        self.retimerWindow: RetimerWindow = RetimerWindow(self)
-        self.windowEditModMessage = None
+        self.windowRetimer: WindowRetimer = WindowRetimer(self)
+        self.windowSettings: WindowSettings = None
 
-        self.alwaysOnTop: bool = True
         self.initUI()
-        self.menuBar = self.menuBar()
-        self.findLatestVersion()
-        self.retimerWindow.loadTimes()
+        self.menuBar: QMenuBar = self.menuBar()
         self.initMenuBar()
 
-        self.menuToggleFPS = None
-        self.menuToggleSubLoads = None
-        self.menuTogglePasteButtons = None
-        self.menuEditModMessage = None
-        self.menuOpenWebsite = None
-        self.menuOpenGithub = None
-        self.menuOpenModHub = None
+        # startup funcs
+        self.findLatestVersion()
+        self.windowRetimer.loadTimes()
 
 
-    def openWindowEditModMessage(self):
-        self.windowEditModMessage = WindowEditModMessage()
-        self.windowEditModMessage.show()
+    def iconify(self, filename):
+        return self.settings.iconDir + filename
+
+
+    def openWindowSettings(self):
+        self.windowSettings = WindowSettings(self)
+
+        # position the new window to the left of the main window
+        new_window_width = 400
+        new_window_height = 400
+        screen = QApplication.desktop().screenGeometry()
+        new_window_left = self.geometry().left() - new_window_width
+        new_window_right = new_window_left + new_window_width
+        new_window_top = self.geometry().top()
+
+        # adjust the position of the new window if necessary to ensure it is fully visible on the screen
+        if new_window_left < screen.left():
+            new_window_right += (screen.left() - new_window_left)
+            new_window_left = screen.left()
+        elif new_window_right > screen.right():
+            new_window_left -= (new_window_right - screen.right())
+            new_window_right = screen.right()
+
+        self.windowSettings.setGeometry(new_window_left, new_window_top, new_window_width, new_window_height)
+
+        self.windowSettings.setWindowModality(Qt.ApplicationModal)
+        self.windowSettings.show()
+
+
+
+    def updateSettings(self):
+        self.windowRetimer.updateSettings()
+        self.app.setStyle(self.settings.getWindowStyle())
 
 
     def closeEvent(self, event):
-        self.retimerWindow.saveTimes()
-        if self.windowEditModMessage is not None:
-            self.windowEditModMessage.close()
+        self.windowRetimer.saveTimes()
+        self.settings.save()
+        if self.windowSettings is not None:
+            self.windowSettings.close()
         event.accept()
 
 
     def initUI(self):
-        self.setWindowTitle("Retimer v" + self.version)
+        self.setWindowTitle("Retimer v" + self.settings.version)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setFixedSize(490, 395)
         widget = QWidget()
-        widget.setLayout(self.retimerWindow.layout)
+        widget.setLayout(self.windowRetimer.layout)
         self.setCentralWidget(widget)
 
 
     def findLatestVersion(self):
-        url = "https://jerrin.org/downloads/retimer/latest.json"
-        latest = requests.get(url).text.split("\n")
-        self.latestVersion = latest[0]
-        self.latestUrl = f"https://jerrin.org/downloads/retimer/{latest[1]}".replace(" ", "%20")
-        if self.version < self.latestVersion:
-            updateBar = self.menuBar.addMenu("Update")
-            _updateButton = updateBar.addAction(f"Download {self.latestVersion}!")
-            _updateButton.triggered.connect(self.downloadUpdate)
+        try:
+            latest = requests.get(self.settings.latestDownload + "latest.json").text.split("\n")
+            self.settings.latestDownloadUrl = f"{self.settings.latestDownload}{latest[1]}".replace(" ", "%20")
+            if self.settings.version < latest[0]:
+                update_bar = self.menuBar.addMenu("Update")
+                addNewAction(update_bar, f"Download {self.settings.latest_ver}!", self.downloadUpdate)
+        except Exception as e:
+            print(e)
+            "do nothing lol, no internet"
+
+
+    def addWebsitePage(self):
+        pass
 
 
     def downloadUpdate(self):
         webbrowser.open(self.latestUrl)
 
 
+    def showCredits(self):
+        msg = QMessageBox(self)
+        msg.setWindowTitle("Credits")
+        msg.setText("UI + Coding   : jerrinth3glitch#6280      \n"
+                    "Icon Design    : Alexis.#3047\n"
+                    "Early Support : Aiivan#8227")
+        msg.setInformativeText(rf"<b>Version {self.settings.version}<\b>")
+        msg.setDetailedText("1. Added \"Clear Times\" button\n"
+                            "2. Fixed Toggle Settings on start-up\n"
+                            "3. Added \"Github\" Page\n"
+                            "4. Added \"Edit Mod Message\"")
+        msg.setStandardButtons(QMessageBox.Ok)
+        msg.exec_()
+
+
+    def openWebsite(self):
+        webbrowser.open(self.settings.url_links["website"])
+
+
+    def openModHub(self):
+        webbrowser.open(self.settings.url_links["modhub"])
+
+
+    def openGithub(self):
+        webbrowser.open(self.settings.url_links["retimer"])
+
+
     def initMenuBar(self):
+
         barFile = self.menuBar.addMenu("File")
-        _viewSaveFile = barFile.addAction("View Save File")
-        _viewSaveFile.triggered.connect(self.retimerWindow.viewFile)
-
-        barSettings = self.menuBar.addMenu("Settings")
-
-        self.menuEditModMessage = QAction(QIcon("../../../icons/gear.png"), "Edit Mod Message", self)
-        self.menuEditModMessage.triggered.connect(self.openWindowEditModMessage)
-        barSettings.addAction(self.menuEditModMessage)
-
-
-        self.menuToggleSubLoads = barSettings.addAction("Include Subloads")
-        self.menuToggleSubLoads.setCheckable(True)
-        self.menuToggleSubLoads.setChecked(self.retimerWindow.rowManager.includeSubLoads)
-        self.menuToggleSubLoads.triggered.connect(self.retimerWindow.rowManager.toggleIncludeSubLoads)
-
-        self.menuTogglePasteButtons = barSettings.addAction("Include Paste Buttons")
-        self.menuTogglePasteButtons.setCheckable(True)
-        self.menuTogglePasteButtons.setChecked(self.retimerWindow.rowManager.includePasteButtons)
-        self.menuTogglePasteButtons.triggered.connect(self.retimerWindow.rowManager.toggleIncludePasteButtons)
+        addNewIconAction(self, barFile, QStyle.SP_DirIcon, "View Save File", self.windowRetimer.viewFile)
+        addNewIconAction(self, barFile, QStyle.SP_DirIcon, "Open Row Template", None)
+        barFile.addSeparator()
+        barFile.addSeparator()
+        addNewIconAction(self, barFile, QStyle.SP_FileDialogListView, "Save Rows as Template", None)
+        barFile.addSeparator()
+        barFile.addSeparator()
+        addNewIconAction(self, barFile, self.iconify("gear.png"), "Settings", self.openWindowSettings)
 
         barWebsites = self.menuBar.addMenu("Websites")
-
-        self.menuOpenModHub = QAction(QIcon("../../../icons/1st.png"), "Moderation Hub", self)
-        self.menuOpenModHub.triggered.connect(self.retimerWindow.openModHub)
-        barWebsites.addAction(self.menuOpenModHub)
-
-        self.menuOpenWebsite = barWebsites.addAction("Open Help")
-        self.menuOpenWebsite.triggered.connect(self.retimerWindow.openWebsite)
+        addNewIconAction(self, barWebsites, self.iconify("1st.png"), "Moderation Hub", self.openModHub)
+        addNewIconAction(self, barWebsites, self.iconify("globe.png"), "Edit Pages", self.addWebsitePage)
 
         barAbout = self.menuBar.addMenu("About")
+        addNewIconAction(self, barAbout, self.iconify("github.png"), "Github Page", self.openGithub)
+        addNewAction(barAbout, "Help", self.openWebsite)
+        addNewAction(barAbout, "Credits", self.showCredits)
 
-        self.menuOpenGithub = QAction(QIcon("../../../icons/git-white.png"), "Github Page", self)
-        self.menuOpenGithub.triggered.connect(self.retimerWindow.openGithub)
-        barAbout.addAction(self.menuOpenGithub)
 
-        _openCredits = barAbout.addAction("Credits")
-        _openCredits.triggered.connect(self.retimerWindow.showCredits)

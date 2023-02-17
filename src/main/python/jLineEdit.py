@@ -9,43 +9,81 @@ import math
 
 # custom imports
 from support import *
+from settings import Settings
+from frameTime import FrameTime
 
 
 
 
 class JLineEdit(QLineEdit):
     def __init__(self,
-                 row,
-                 maxLength: int = 32,
+                 parent=None,
                  text: str = "",
+                 maxLength: int = 32,
                  readOnly: bool = False,
-                 allowDecimalAndNegative: bool = True,
-                 isRow: bool = True):
+                 allow_decimal: bool = True,
+                 allow_negative: bool = True,
+                 change_func=None,
+                 timeEdit: bool = True,
+                 fixedWidth: int = None,
+                 centerText: bool = True,
+                 styleSheet: str = None,
+                 placeHolder: str = None,
+                 hide: bool = False):
         super().__init__()
 
-        if isRow:
-            self.parent = row.parent
-        else:
-            self.parent = row
-        self.row = row
-        self.isRow: bool = isRow
-        self.maxLength: int = maxLength
-        self.pastedYoutube: bool = False
+
+        self.settings: Settings = parent.settings
         self.lastText: str = text
         self.setText(text)
+        self.maxLength: int = maxLength
+        self.allow_decimal: bool = allow_decimal
+        self.allow_negative: bool = allow_negative
+        self.changeFunc = change_func
+        self.timeEdit = timeEdit
         self.readOnly = readOnly
+
+
+        self.time = FrameTime()
+
+
+        if fixedWidth:
+            self.setFixedWidth(fixedWidth)
+        if centerText:
+            self.setAlignment(Qt.AlignCenter)
         if self.readOnly:
             self.setReadOnly(True)
-        self.allowDecimalAndNegative: bool = allowDecimalAndNegative
-        self.setAlignment(Qt.AlignCenter)
+        if styleSheet:
+            self.setStyleSheet(styleSheet)
+        self.textChanged[str].connect(self.isValid)
+        self.placeHolderText = placeHolder
+        if self.settings.get("show-hints"):
+            self.setPlaceholderText(self.placeHolderText)
+        if hide:
+            self.hide()
 
         self.menu = QMenu(self)
+        self.initMenu()
+
+
+    def updateHint(self):
+        if self.settings.get("show-hints"):
+            self.setPlaceholderText(self.placeHolderText)
+        else:
+            self.setPlaceholderText("")
+
+
+    def getFPS(self):
+        return self.settings.get("fps")
+
+
+    def initMenu(self):
         palette = QPalette()
-        palette.setColor(QPalette.HighlightedText, QColor(42, 130, 218))
+        palette.setColor(QPalette.HighlightedText, text_cyan)
         self.menu.setPalette(palette)
-        self.menu.addAction(QAction("Format Time", self, triggered=self.handleFormatTime))
-        self.menu.addAction(QAction("Remove Time", self, triggered=self.clear))
-        self.menu.addAction(QAction("Paste Frames[WIP]", self, triggered=self.handlePasteFrames))
+        addNewAction(self.menu, "Format Time", self.handleFormatTime)
+        addNewAction(self.menu, "Remove Time", self.clear)
+        addNewAction(self.menu, "Paste Frames[WIP]", self.handlePasteFrames)
 
 
     def handlePasteFrames(self):
@@ -53,107 +91,81 @@ class JLineEdit(QLineEdit):
 
 
     def handleFormatTime(self):
-        print("handle format Time")
         if self.text() != "":
-            value = self.getValue()
-            value = formatToTime(value, self.parent.fps)
-            self.setText(str(value))
+            value = formatToTime(self.getValue(), self.getFPS())
+            self.setText(value)
+
+
+    def setText(self, p_str):
+        if not isinstance(p_str, str):
+            p_str = str(p_str)
+        super().setText(p_str)
 
 
     def contextMenuEvent(self, event):
         self.menu.exec_(event.globalPos())
 
 
-    def clear(self):
+    def clear(self) -> None:
         self.setText("")
 
 
     def updateText(self, text, successful=True):
-        # do this if it is debug info
-        if self.pastedYoutube:
-            self.pastedYoutube = False
-        # fix the cursor position, hold it
         if successful:
             temp = self.cursorPosition()
         else:
             lengthAdded = len(self.text()) - len(self.lastText)
             temp = self.cursorPosition() - lengthAdded
-        # replace the minus sign for making it look nicer
-        # text = text.replace("–", "-")
-        # ensure the string is smaller than max length
+
+        text = text.replace("-", "–")
+
         self.setText(text[0:self.maxLength])
-        # fix the cursor location
         self.setCursorPosition(temp)
-        # update last text
         self.lastText = text
-        if self.isRow:
-            # update that columns total time
-            self.row.updateTotalTime()
+
+        if callable(self.changeFunc):
+            self.changeFunc()
 
 
-    def isEmpty(self):
+
+    def isEmpty(self) -> bool:
         return self.text() == ""
 
 
-    def isValid(self):
+    def isValid(self) -> bool:
+        text = self.text()
         # prevents recursion
-        if self.text() == self.lastText:
-            return
-        # prevents "fixing" non-writable text boxes
-        if self.readOnly:
+        if self.readOnly or text == self.lastText:
             return
 
         # parses youtube debug info
-        try:
-            self.pastedYoutube = True
-            value, state = formatYoutubeDebugInfo(self.text(), self.parent.fps)
-            if state:
-                value = self.parent.formatToTime(float(value))
+        if self.timeEdit:
+            frameTime = FrameTime(fps=self.getFPS())
+            if frameTime.isYTDebug(text):
+                frameTime.YTDebugInfo(text)
+                value = frameTime.getTotalTime()
                 return self.updateText(value)
-        except:
-            self.pastedYoutube = False
 
-        text = self.text()
-        if ("–" in text) or ("-" in text):
-            # print("has", text)
-            text = "–" + text.replace("–", "").replace("-", "")
-        # tests validity of entered text
-        if self.allowDecimalAndNegative:
-            isvalid1 = all(x in " dw0123456789.:–-" for x in text)
-        else:
-            isvalid1 = all(x in " dw0123456789" for x in text)
-        isvalid2 = text.count(".") < 2
-        isvalid3 = text.count("–") + text.count("-") < 2
-        # print(isvalid1, isvalid2, isvalid3)
-        if not (isvalid1 and isvalid2 and isvalid3):
-            return self.updateText(self.lastText, False)
-        else:
+
+        # if the
+        if self.time.isValidTime(text, self.allow_decimal, self.allow_negative):
             self.updateText(text[:self.maxLength])
+        else:
+            self.updateText(self.lastText[:self.maxLength], False)
 
 
     # parses a time signature into an integer in seconds.
     def getValue(self):  # 1:32.54 -> 92.54
-        # parses the negative out
-        isNegative = "–" in self.text() or "-" in self.text()
-        text = self.text().replace("–", "-").replace("-", "")
-        # break up the text to its sub pieces
-        text = text.replace("d :", "d:")
-        text = text.replace("d", "")
-        text = text.replace("w", "")
-        text = text.replace(" ", ":")
-        textValues = text.split(":")
-        # converts all strings in the parsed list to float or 0
-        values = [0 if i in ["", "0"] else float(i) for i in textValues]
-        # Makes all numbers negative if top number is negative, makes order [seconds, minutes, hours, etc]
-        values = reversed([-i if isNegative else i for i in values])
-        # computes final amount by parsing the sections into amounts
-        totalTime = 0
-        multiples = [1, 60, 3600, 86400, 604800]  # seconds in [seconds, minutes, hours, days, weeks]
-        # looks over different sizes
-        for n, val in enumerate(values):
-            totalTime += val * multiples[n]
-        # converts total time to an int if it should be one IDK lol
-        if str(totalTime).endswith(".0"):
-            totalTime = int(totalTime)
-        # :sunglasses: we did it fam!!! :heart-emoji:
-        return totalTime
+
+        if self.timeEdit:
+            time = FrameTime.convertToSeconds(self.text())
+            # time = self.time.getTotalMilliseconds()
+        else:
+            if self.text() == "":
+                time = 30
+            else:
+                time = int(self.text())
+
+
+        return time
+
