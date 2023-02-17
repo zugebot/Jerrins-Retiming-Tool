@@ -4,77 +4,65 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPalette, QColor, QIcon
+import subprocess
 import webbrowser
 import json
 import os
 
 # custom imports
-from rowManager import RowManager
+from support import *
+from row import Row
+from frameTime import FrameTime
 from jLineEdit import JLineEdit
-from windowEditModMessage import WindowEditModMessage
+from windowSettings import WindowSettings
 
 
 
-class RetimerWindow:
+class WindowRetimer:
     def __init__(self, parent):
         self.parent = parent
-        self.rowManager: RowManager = RowManager(self)
-        self.saveFileName: str = "save.json"
+        self.settings = parent.settings
+        # self.rowManager: RowManager = RowManager(self)
+        self.rows: List[Row] = []
+
+        self.saveFileName: str = self.settings.documentFolder + "save.json"
         self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignTop)
-
-        self.links = {
-            "website": 'https://jerrin.org',
-            "modhub": 'https://www.speedrun.com/modhub',
-            "retimer": 'https://github.com/zugebot/Speedrun-Retimer'
-        }
 
         # MAIN LAYOUT PARTS
         self.firstBar = QHBoxLayout()
         self.secondBar = QHBoxLayout()
         self.scrollArea = QScrollArea()
+        self.bottomBar = QHBoxLayout()
         self.layout.addLayout(self.firstBar)
         self.layout.addLayout(self.secondBar)
         self.layout.addWidget(self.scrollArea)
-
+        self.layout.addLayout(self.bottomBar)
         # 1. first and second bar stuff
-        self.bAddRow = QPushButton("Add Row")
-        self.bAddRow.clicked.connect(self.rowManager.addRow)
-        self.bAddRow.setFixedWidth(97)
 
-
-        self.bDelRow = QPushButton("Del Row")
-        self.bDelRow.clicked.connect(self.rowManager.delRow)
-        self.bDelRow.setFixedWidth(97)
+        self.bAddRow = newButton("Add Row", 97, self.addRow)
+        self.bDelRow = newButton("Del Row", 97, self.delRow)
 
         self.LabelFPS = QLabel("FPS")
         self.LabelFPS.setFixedWidth(20)
 
-        self.LineEditFPS = JLineEdit(self, text="30", maxLength=3, allowDecimalAndNegative=False, isRow=False)
-        self.LineEditFPS.setFixedWidth(30)
-        self.LineEditFPS.textChanged[str].connect(self.rowManager.updateFPS)
+        self.LineEditFPS = JLineEdit(self, text="30", maxLength=3, allow_decimal=False, fixedWidth=30,
+                                     timeEdit=False)
+        self.LineEditFPS.textChanged[str].connect(self.updateFPS)
 
-        self.buttonCopyMod = QPushButton("Copy Mod Message")
-        self.buttonCopyMod.clicked.connect(self.copyModMessage)
-
-        self.buttonClearSplits = QPushButton("Clear Splits")
-        self.buttonClearSplits.clicked.connect(self.resetManager)
-        self.buttonClearSplits.setFixedWidth(85)
-
-        self.buttonClearTimes = QPushButton("Clear Times")
-        self.buttonClearTimes.clicked.connect(self.resetManagerTimes)
-        self.buttonClearTimes.setFixedWidth(85)
+        self.buttonCopyMod = newButton("Copy Mod Message", None, self.copyModMessage)
+        self.buttonClearSplits = newButton("Clear Splits", 85, self.resetManagerSplits)
+        self.buttonClearTimes = newButton("Clear Times", 85, self.resetManagerTimes)
 
         self.labelModMessage = QLineEdit()
         self.labelModMessage.setStyleSheet("background-color: dark-grey;")
         self.labelModMessage.setReadOnly(True)
+        self.labelModMessage.setPlaceholderText("Mod Message...")
 
-        self.firstBar.addWidget(self.bAddRow)
-        self.firstBar.addWidget(self.LabelFPS)
-        self.firstBar.addWidget(self.LineEditFPS)
-        self.firstBar.addWidget(self.buttonCopyMod)
-        self.firstBar.addWidget(self.buttonClearSplits)
-        self.firstBar.addWidget(self.buttonClearTimes)
+        widgetList = [self.bAddRow, self.LabelFPS, self.LineEditFPS,
+                      self.buttonCopyMod, self.buttonClearSplits, self.buttonClearTimes]
+        for widget in widgetList:
+            self.firstBar.addWidget(widget)
 
         self.secondBar.addWidget(self.bDelRow)
         self.secondBar.addWidget(self.labelModMessage)
@@ -88,8 +76,130 @@ class RetimerWindow:
         self.scrollArea.setWidget(self.scrollWidget)
 
         self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setFixedHeight(300)
+        self.scrollArea.setFixedHeight(285)
         self.scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+        # bottom part
+        self.rowCountLabel = QLabel(f"Rows: {len(self.rows)}")
+        self.bottomBar.addWidget(self.rowCountLabel)
+
+
+    def getFPS(self):
+        return self.settings.get("fps")
+
+
+    def resetRows(self):
+        while len(self.rows) > 1:
+            self.delRow()
+        self.rows[0].clear()
+
+
+    def resetTimes(self):
+        for row in self.rows:
+            row.clear(swapSign=False)
+
+
+    def addRow(self):
+        newRow = Row(self, len(self.rows))
+        self.rows.append(newRow)
+        self.rowForm.addRow(newRow.layout)
+        self.updateRowCount()
+        return newRow
+
+
+    def delRow(self):
+        if len(self.rows) <= 1:
+            return
+        rowIntToDelete = len(self.rows) - 1
+        self.rowForm.removeRow(rowIntToDelete)
+        self.rows.pop()
+        self.updateRowCount()
+
+
+    def updateRowCount(self):
+        self.rowCountLabel.setText(f"Rows: {len(self.rows)}")
+
+
+    def updateModTotalTime(self):
+        finalTime = 0
+        subLoadTime = 0
+        frameTime = FrameTime(fps=self.getFPS())
+
+        allRowsEmpty = True
+        for row in self.rows:
+            if row.textFinalTime.isEmpty():
+                continue
+
+            allRowsEmpty = False
+            row.updateTotalTime(updateMod=False)
+            row.textFinalTime.time.updateFPS(self.getFPS())
+            row.textTime1.time.updateFPS(self.getFPS())
+            row.textTime2.time.updateFPS(self.getFPS())
+            finalTime += row.textFinalTime.getValue()
+            subLoadTime += row.textSubLoad.getValue()
+
+            time1 = row.textTime1.getValue()
+            if time1 < frameTime.timeStart:
+                frameTime.timeStart = time1
+
+            time2 = row.textTime2.getValue()
+            if time2 > frameTime.timeEnd:
+                frameTime.timeEnd = time2
+
+        if allRowsEmpty or finalTime == 0:
+            self.labelModMessage.clear()
+        else:
+            frameTime.setMilliseconds(finalTime)
+            message = frameTime.createModMessage(self.settings.get("mod-message"))
+            self.labelModMessage.setText(message)
+
+
+    def updateSettings(self):
+        self.toggleSubLoads()
+        self.togglePasteButtons()
+        self.resizeRowWidgets()
+        self.updateRowHints()
+        self.updateModTotalTime()
+
+
+    def resizeRowWidgets(self):
+        for row in self.rows:
+            row.resizeWidgets()
+
+
+    def updateRowHints(self):
+        for row in self.rows:
+            row.updateHints()
+
+
+    def toggleSubLoads(self):
+        for row in self.rows:
+            if self.settings.get("include-sub-loads"):
+                row.textSubLoad.show()
+            else:
+                row.textSubLoad.clear()
+                row.textSubLoad.hide()
+
+    def togglePasteButtons(self):
+        for row in self.rows:
+            if self.settings.get("include-paste-buttons"):
+                row.buttonPaste1.show()
+                row.buttonPaste2.show()
+            else:
+                row.buttonPaste1.hide()
+                row.buttonPaste2.hide()
+
+
+    def updateFPS(self):
+        self.LineEditFPS.isValid()
+        self.settings.set("fps", self.LineEditFPS.getValue())
+        if self.getFPS() == 0:
+            self.settings.set("fps", 30)
+        for row in self.rows:
+            row.updateTotalTime()
+        self.updateModTotalTime()
+        print(f"updated FPS to {self.settings.get('fps')}")
+
 
 
     def copyModMessage(self):
@@ -98,93 +208,45 @@ class RetimerWindow:
         cb.setText(self.labelModMessage.text(), mode=cb.Clipboard)
 
 
-    def resetManager(self):
-        qm = QMessageBox()
-        ret = qm.question(self.parent, '', "Are you sure to remove all rows and times?", qm.Yes | qm.No)
-        if ret == qm.Yes:
-            self.rowManager.resetRows()
+
+    def resetManagerSplits(self):
+        newQuestionBox(self.parent,
+                       title="Reset Splits",
+                       message="Are you sure to remove all rows and times?",
+                       funcYes=self.resetRows)
+
 
 
     def resetManagerTimes(self):
-        qm = QMessageBox()
-        ret = qm.question(self.parent, '', "Are you sure to remove all the times?", qm.Yes | qm.No)
-        if ret == qm.Yes:
-            self.rowManager.resetTimes()
+        newQuestionBox(self.parent,
+                       title="Reset Times",
+                       message="Are you sure to remove all the times?",
+                       funcYes=self.resetTimes)
 
 
-    def openWebsite(self):
-        webbrowser.open(self.links["website"])
-
-
-    def openModHub(self):
-        webbrowser.open(self.links["modhub"])
-
-
-    def openGithub(self):
-        webbrowser.open(self.links["retimer"])
-
-
-    def showCredits(self):
-        msg = QMessageBox(self.parent)
-        msg.setWindowTitle("Credits")
-        msg.setText("UI + Coding   : jerrinth3glitch#6280      \n"
-                    "Icon Design    : Alexis.#3047\n"
-                    "Early Support : Aiivan#8227")
-        msg.setInformativeText(rf"<b>Version {self.parent.version}<\b>")
-        msg.setDetailedText("1. Added \"Clear Times\" button\n"
-                            "2. Fixed Toggle Settings on start-up\n"
-                            "3. Added \"Github\" Page\n"
-                            "4. Added \"Edit Mod Message\"")
-        msg.setStandardButtons(QMessageBox.Ok)
-        msg.exec_()
+    def saveTimes(self):
+        rowData = [row.getDict() for row in self.rows]
+        write_json({"rows": rowData}, self.saveFileName)
 
 
     def viewFile(self):
         self.saveTimes()
-        subprocess.Popen(r'explorer /select,"{}"'.format(self.saveFileName))
-
-
-    def saveTimes(self):
-        # main settings
-        data = {"fps": self.rowManager.fps,
-                "includeSubLoads": self.rowManager.includeSubLoads,
-                "includePasteButtons": self.rowManager.includePasteButtons}
-        # saving rows
-        rowData = []
-        for row in self.rowManager.rows:
-            rowDict = {"signType": row.signType,
-                       "text1": row.textTime1.text(),
-                       "subLoad": row.textSubLoad.text(),
-                       "text2": row.textTime2.text()
-                       }
-            rowData.append(rowDict)
-        data["rows"] = rowData
-        # write data to saveFileName
-        with open(self.saveFileName, "w") as file:
-            file.write(json.dumps(data, indent=4))
+        self.settings.openFileDialog(self.saveFileName)
 
 
     def loadTimes(self):
-        # create the file if not already there
-        if not os.path.exists(self.saveFileName):
-            with open(self.saveFileName, 'w') as file:
-                file.write("{}")
-        # reads the data
-        with open(self.saveFileName, "r") as file:
-            data = json.loads(file.read())
-            if data == {}:
-                self.rowManager.addRow()
-                return
+        data = read_json(self.saveFileName)
+        if not data:
+            return self.addRow()
+
         # populates the settings
-        self.rowManager.fps = data["fps"]
-        self.LineEditFPS.setText(str(self.rowManager.fps))
-        self.rowManager.toggleIncludeSubLoads(value=data["includeSubLoads"])
-        self.rowManager.toggleIncludePasteButtons(value=data["includePasteButtons"])
+        self.LineEditFPS.setText(self.getFPS())
+
+        self.toggleSubLoads()
+        self.togglePasteButtons()
+
         # populate the row data
-        for rowData in data["rows"]:
-            row = self.rowManager.addRow()
-            if rowData["signType"] == -1:
-                row.swapValueSign()
-            row.textTime1.setText(rowData["text1"])
-            row.textSubLoad.setText(rowData["subLoad"])
-            row.textTime2.setText(rowData["text2"])
+        for row_dict in data["rows"]:
+            row = self.addRow()
+            row.setDict(row_dict)
+

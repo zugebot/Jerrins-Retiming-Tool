@@ -8,6 +8,8 @@ from PyQt5.QtGui import QPalette, QColor
 import sys
 
 # custom imports
+from support import *
+from settings import Settings
 from windowMain import WindowMain
 
 
@@ -15,9 +17,8 @@ class AppContext(ApplicationContext):
     def run(self):
         app = QApplication([])
 
-        app.setStyle("Fusion")
         palette = QPalette()
-        
+
         palette.setColor(QPalette.Window, QColor(53, 53, 53))
         palette.setColor(QPalette.WindowText, Qt.white)
         palette.setColor(QPalette.Base, QColor(25, 25, 25))
@@ -28,14 +29,18 @@ class AppContext(ApplicationContext):
         palette.setColor(QPalette.Button, QColor(53, 53, 53))
         palette.setColor(QPalette.ButtonText, Qt.white)
         palette.setColor(QPalette.BrightText, Qt.red)
-        palette.setColor(QPalette.Link, QColor(42, 130, 218))
-        palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+        palette.setColor(QPalette.Link, text_cyan)
+        palette.setColor(QPalette.Highlight, text_cyan)
 
         palette.setColor(QPalette.HighlightedText, Qt.black)
         app.setPalette(palette)
 
-        windowMain = WindowMain("1.04.0")
+        settings = Settings("1.04.0")
+        app.setStyle(settings.getWindowStyle())
+
+        windowMain = WindowMain(app, settings)
         windowMain.show()
+
         return self.app.exec_()
 
 
