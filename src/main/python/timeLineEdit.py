@@ -15,7 +15,7 @@ from frameTime import FrameTime
 
 
 
-class JLineEdit(QLineEdit):
+class TimeLineEdit(QLineEdit):
     def __init__(self,
                  parent=None,
                  text: str = "",
@@ -159,7 +159,6 @@ class JLineEdit(QLineEdit):
 
         if self.timeEdit:
             time = FrameTime.convertToSeconds(self.text())
-            # time = self.time.getTotalMilliseconds()
         else:
             if self.text() == "":
                 time = 30

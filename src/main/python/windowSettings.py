@@ -7,11 +7,7 @@ from PyQt5.QtGui import QPalette, QColor, QIcon
 
 # custom imports
 from support import *
-
-
-
-
-
+from frameTime import FrameTime
 
 
 
@@ -22,9 +18,9 @@ class WindowSettings(QWidget):
         self.settings = parent.settings
 
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowTitle("Settings")
-        self.width = 400
-        self.setFixedSize(self.width, 400)
+        self.setWindowTitle(f"Settings [{self.settings.version}]")
+
+        self.setFixedWidth(350)
 
 
         # SETTINGS, preset
@@ -84,14 +80,26 @@ class WindowSettings(QWidget):
 
         # mod options
 
-        self.learnClickLabel = ClickableLabel("How to format your mod message...", self.settings.url_links["mod-message-formatting"])
+        self.learnClickLabel = ClickableLabel("Formatting Guide", self.settings.url_links["mod-message-formatting"])
+        self.learnClickLabel.setStyleSheet(bold_cyan)
 
         self.modMessageEdit = QTextEdit()
         self.modMessageEdit.textChanged.connect(self.modMessageChanged)
+        self.modMessageEdit.verticalScrollBar().valueChanged.connect(self.modMessageEditScrolled)
+        self.modMessageView = QTextEdit()
+        self.modMessageView.setReadOnly(True)
+
+        self.exampleFrameTime = FrameTime()
+        self.exampleFrameTime.setMilliseconds(30100)
+        self.exampleFrameTime.setStartAndEnd(5917, 36017)
+
+        self.exampleLabel = QLabel("Current Formatted Example")
+        self.exampleLabel.setStyleSheet(bold_cyan)
 
         self.modSettingsGrid.addWidget(self.learnClickLabel, 0, 0, 1, 1)
         self.modSettingsGrid.addWidget(self.modMessageEdit, 1, 0, 1, 1)
-
+        self.modSettingsGrid.addWidget(self.exampleLabel, 2, 0, 1, 1)
+        self.modSettingsGrid.addWidget(self.modMessageView, 3, 0, 1, 1)
 
 
 
@@ -151,6 +159,13 @@ class WindowSettings(QWidget):
 
     def modMessageChanged(self):
         self._modMessage = self.modMessageEdit.toPlainText()
+        message = self.exampleFrameTime.createModMessage(self._modMessage)
+        self.modMessageView.setText(message)
+        scroll_val = self.modMessageEdit.verticalScrollBar().value()
+        self.modMessageView.verticalScrollBar().setValue(scroll_val)
+
+    def modMessageEditScrolled(self, value):
+        self.modMessageView.verticalScrollBar().setValue(value)
 
 
     def restoreDefaults(self):

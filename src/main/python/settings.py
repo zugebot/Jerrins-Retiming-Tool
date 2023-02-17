@@ -35,7 +35,7 @@ class Settings:
             "website": 'https://jerrin.org',
             "modhub": 'https://www.speedrun.com/modhub',
             "retimer": 'https://github.com/zugebot/Speedrun-Retimer',
-            "mod-message-formatting": ""
+            "mod-message-formatting": "https://github.com/zugebot/Speedrun-Retimer/blob/main/MOD_FORMAT.md"
         }
 
 
