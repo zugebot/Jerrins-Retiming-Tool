@@ -10,7 +10,7 @@ import webbrowser
 # custom imports
 from support import *
 from row import Row
-from jLineEdit import JLineEdit
+from jLineEdit import TimeLineEdit
 from windowRetimer import WindowRetimer
 from windowSettings import WindowSettings
 
@@ -45,7 +45,7 @@ class WindowMain(QMainWindow):
         self.windowSettings = WindowSettings(self)
 
         # position the new window to the left of the main window
-        new_window_width = 400
+        new_window_width = 350
         new_window_height = 400
         screen = QApplication.desktop().screenGeometry()
         new_window_left = self.geometry().left() - new_window_width
@@ -81,9 +81,10 @@ class WindowMain(QMainWindow):
 
 
     def initUI(self):
-        self.setWindowTitle("Retimer v" + self.settings.version)
+        self.setWindowTitle("Speedrun Retimer")
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setFixedSize(490, 395)
+        # self.setMinimumWidth(470)
+        # self.setFixedHeight(400)
         widget = QWidget()
         widget.setLayout(self.windowRetimer.layout)
         self.setCentralWidget(widget)

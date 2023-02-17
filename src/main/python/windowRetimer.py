@@ -13,7 +13,7 @@ import os
 from support import *
 from row import Row
 from frameTime import FrameTime
-from jLineEdit import JLineEdit
+from jLineEdit import TimeLineEdit
 from windowSettings import WindowSettings
 
 
@@ -34,21 +34,21 @@ class WindowRetimer:
         self.secondBar = QHBoxLayout()
         self.scrollArea = QScrollArea()
         self.bottomBar = QHBoxLayout()
+        self.bottomBar.setAlignment(Qt.AlignTop)
         self.layout.addLayout(self.firstBar)
         self.layout.addLayout(self.secondBar)
         self.layout.addWidget(self.scrollArea)
         self.layout.addLayout(self.bottomBar)
         # 1. first and second bar stuff
 
-        self.bAddRow = newButton("Add Row", 97, self.addRow)
-        self.bDelRow = newButton("Del Row", 97, self.delRow)
+        self.bAddRow = newButton("Add Row", 80, self.addRow)
+        self.bDelRow = newButton("Del Row", 80, self.delRow)
 
         self.LabelFPS = QLabel("FPS")
         self.LabelFPS.setFixedWidth(20)
 
-        self.LineEditFPS = JLineEdit(self, text="30", maxLength=3, allow_decimal=False, fixedWidth=30,
-                                     timeEdit=False)
-        self.LineEditFPS.textChanged[str].connect(self.updateFPS)
+        self.LineEditFPS = TimeLineEdit(self, text="30", maxLength=3, allow_decimal=False, fixedWidth=30,
+                                        timeEdit=False, change_func=self.updateFPS)
 
         self.buttonCopyMod = newButton("Copy Mod Message", None, self.copyModMessage)
         self.buttonClearSplits = newButton("Clear Splits", 85, self.resetManagerSplits)
@@ -59,12 +59,16 @@ class WindowRetimer:
         self.labelModMessage.setReadOnly(True)
         self.labelModMessage.setPlaceholderText("Mod Message...")
 
-        widgetList = [self.bAddRow, self.LabelFPS, self.LineEditFPS,
-                      self.buttonCopyMod, self.buttonClearSplits, self.buttonClearTimes]
+        self.rowCountLabel = QLabel(f"Rows: {len(self.rows)}")
+
+
+        widgetList = [self.bAddRow, self.LabelFPS, self.LineEditFPS, self.buttonCopyMod,
+                      self.buttonClearSplits, self.buttonClearTimes]
         for widget in widgetList:
             self.firstBar.addWidget(widget)
 
         self.secondBar.addWidget(self.bDelRow)
+        self.secondBar.addWidget(self.rowCountLabel)
         self.secondBar.addWidget(self.labelModMessage)
 
         # 3. scroll area stuff
@@ -76,12 +80,10 @@ class WindowRetimer:
         self.scrollArea.setWidget(self.scrollWidget)
 
         self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setFixedHeight(285)
+        self.scrollArea.setFixedHeight(295)
         self.scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        # bottom part
-        self.rowCountLabel = QLabel(f"Rows: {len(self.rows)}")
-        self.bottomBar.addWidget(self.rowCountLabel)
+
 
 
     def getFPS(self):

@@ -7,7 +7,7 @@ from PyQt5.QtGui import QPalette, QColor, QIcon
 
 # custom imports
 from support import *
-from jLineEdit import JLineEdit
+from jLineEdit import TimeLineEdit
 from frameTime import FrameTime
 
 
@@ -29,19 +29,19 @@ class Row:
         # add widgets
         self.buttonSignType = newButton(f"+{number + 1}", 30, self.swapValueSign, style_sheet=bold_cyan)
         self.buttonPaste1 = newButton("Paste", 45, self.pasteIntoTextBox1, hide=hidePaste)
-        self.textTime1 = JLineEdit(self, fixedWidth=80, styleSheet=bkg_grey, placeHolder="Start...",
-                                   change_func=self.updateTotalTime)
+        self.textTime1 = TimeLineEdit(self, styleSheet=bkg_grey, placeHolder="Start...", change_func=self.updateTotalTime)
         self.buttonPaste2 = newButton("Paste", 45, self.pasteIntoTextBox2, hide=hidePaste)
-        self.textTime2 = JLineEdit(self, fixedWidth=80, styleSheet=bkg_grey, placeHolder="End...",
-                                   change_func=self.updateTotalTime)
-        self.textSubLoad = JLineEdit(self, maxLength=4, allow_decimal=False, fixedWidth=34,
-                                     styleSheet=bkg_grey, hide=hideSubLoad, change_func=self.updateTotalTime)
-        self.textFinalTime = JLineEdit(self, readOnly=True, styleSheet=bkg_grey, placeHolder="Total...")
+        self.textTime2 = TimeLineEdit(self, styleSheet=bkg_grey, placeHolder="End...", change_func=self.updateTotalTime)
+        self.textSubLoad = TimeLineEdit(self, maxLength=4, allow_decimal=False, styleSheet=bkg_grey,
+                                        hide=hideSubLoad, change_func=self.updateTotalTime)
+        self.textFinalTime = TimeLineEdit(self, readOnly=True, styleSheet=bkg_grey, placeHolder="Total...")
+        self.rightSpacer = QSpacerItem(5, 5, QSizePolicy.Fixed)
         # add all these items to self.layout
         widgetList = [self.buttonSignType, self.buttonPaste1, self.textTime1, self.buttonPaste2,
                       self.textTime2, self.textSubLoad, self.textFinalTime]
         for widget in widgetList:
             self.layout.addWidget(widget)
+        # self.layout.addItem(self.rightSpacer)
         self.resizeWidgets()
 
     def resizeWidgets(self):
@@ -49,10 +49,10 @@ class Row:
                    self.textTime2, self.textSubLoad, self.textFinalTime]
 
         widths = [
-            [None, 130, None, 130, None, 130],  # pastes and subload not showing 0
-            [45, 97, 45, 97, None, 97],  # subload not showing 1
-            [None, 119, None, 119, 34, 119],  # pastes not showing 2
-            [45, 83, 45, 83, 34, 83]  # all showing 3
+            [None, 80, None,  80, None, 80],  # pastes and subload not showing 0
+            [  43, 80,   43,  80, None, 80],  # subload not showing 1
+            [None, 80, None,  80,   34, 80],  # pastes not showing 2
+            [  43, 80,   43,  80,   34, 80]   # all showing 3
         ]
 
         settingIndex = self.settings.get("include-paste-buttons") + 2 * self.settings.get("include-sub-loads")
@@ -69,11 +69,10 @@ class Row:
         if self.signType == -1:
             self.buttonSignType.setText(f"−{self.number + 1}")
             self.buttonSignType.setStyleSheet(bold_red)
-            # self.textFinalTime.setStyleSheet(text_red)
         else:
             self.buttonSignType.setText(f"+{self.number + 1}")
             self.buttonSignType.setStyleSheet(bold_cyan)
-            # self.textFinalTime.setStyleSheet(text_green)
+
 
         self.updateTotalTime()
 
@@ -153,12 +152,9 @@ class Row:
 
 
     def updateTotalTime(self, updateMod=True):
-        self.textTime1.time.updateFPS(self.settings.get("fps"))
-        self.textTime2.time.updateFPS(self.settings.get("fps"))
-
-        print("tttt")
-        print(self.textTime1.time.backup_milliseconds, self.textTime1.time.milliseconds)
-        print(self.textTime2.time.backup_milliseconds, self.textTime2.time.milliseconds)
+        fps = self.settings.get("fps")
+        self.textTime1.time.updateFPS(fps)
+        self.textTime2.time.updateFPS(fps)
 
         time1 = self.textTime1.getValue()
         time2 = self.textTime2.getValue()
@@ -170,8 +166,7 @@ class Row:
             return
 
         value = self.signType * abs(time2 - time1) + subLoad
-        print("yay", value)
-        totalTime = FrameTime(value, self.settings.get("fps")).getTotalTime()
+        totalTime = FrameTime(value, fps).getTotalTime()
 
         self.textFinalTime.setText(totalTime)
         if updateMod:
