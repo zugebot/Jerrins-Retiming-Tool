@@ -11,17 +11,38 @@ import math
 import json
 import os
 
-
-
+"""
 bkg_grey = "background-color: dark-grey;"
-bold_green = "font: bold; color: rgb(0,150,0);"
-text_green = "color: rgb(0,150,0);"
 text_red = "color: red;"
 bold_red = "font: bold; color: rgb(180,0,0);"
 bold_cyan = "font: bold; color: rgb(42,130,218);"
 bold_text = "font: bold;"
-text_cyan = QColor(42, 130, 218)
+text_cyan = "color: rgb(42,130,218);" # QColor(42, 130, 218)
+"""
 
+
+def makeStyle(bold=False, text_color=None, bkg_color=None):
+    style_str: str = ""
+
+    if bold:
+        style_str += "font: bold; "
+
+    if text_color is not None:
+        if isinstance(text_color, QColor):
+            text_color = list(text_color.getRgb()[:3])
+
+        if isinstance(text_color, str):
+            style_str += f"color: {text_color}"
+        elif type(text_color) in [tuple, list]:
+            style_str += f"color: rgb({text_color[0]},{text_color[1]},{text_color[2]});"
+
+    if bkg_color is not None:
+        if isinstance(bkg_color, str):
+            style_str += f"background-color: {bkg_color}"
+        elif type(bkg_color) in [tuple, list]:
+            style_str += f"background-color: rgb({bkg_color[0]},{bkg_color[1]},{bkg_color[2]});"
+
+    return style_str
 
 
 def write_json(data, filename):
@@ -60,23 +81,26 @@ def getGameNameFromUrl(url):
     return None
 
 
-
-def addNewAction(menu, text_str="", func=None):
-    action = menu.addAction(text_str)
+def addNewAction(menu, text_str="", func=None, shortcut=None):
+    action: QAction = menu.addAction(text_str)
     if callable(func):
         action.triggered.connect(func)
+    if shortcut is not None:
+        action.setShortcut(shortcut)
     return action
 
 
-def addNewIconAction(root, menu, icon, text_str="", func=None):
+def addNewIconAction(root, menu, icon, text_str="", func=None, shortcut=None):
     if isinstance(icon, str):
         icon = QIcon(icon)
     if isinstance(icon, QStyle.StandardPixmap):
         icon = QWidget().style().standardIcon(icon)
 
-    action = QAction(icon, text_str, root)
+    action: QAction = QAction(icon, text_str, root)
     if callable(func):
         action.triggered.connect(func)
+    if shortcut is not None:
+        action.setShortcut(shortcut)
     menu.addAction(action)
     return action
 
@@ -100,7 +124,6 @@ def newCheckbox(menu, text_str="", checkable=True, checked=True, func=None):
         action.triggered.connect(func)
 
 
-
 def newButton(text="", fixed_width=None, func=None, hide=None, style_sheet=None):
     button: QPushButton = QPushButton(text)
     if fixed_width is not None:
@@ -118,26 +141,26 @@ def newQuestionBox(root, title="", message="", funcYes=None, funcNo=None, argsYe
     qm: QMessageBox = QMessageBox()
     ret = qm.question(root, title, message, qm.Yes | qm.No)
     if ret == qm.Yes:
-        if callable(funcYes):
-            if argsYes != ():
-                if isinstance(argsYes, tuple):
-                    return funcYes(*argsYes)
-                else:
-                    return funcYes(argsYes)
+        if not callable(funcYes):
+            return True
+        if argsYes != ():
+            if isinstance(argsYes, tuple):
+                return funcYes(*argsYes)
             else:
-                return funcYes()
+                return funcYes(argsYes)
+        else:
+            return funcYes()
+
     elif ret == qm.No:
-        if callable(funcNo):
-            if argsNo != ():
-                if isinstance(argsNo, tuple):
-                    return funcNo(*argsNo)
-                else:
-                    return funcNo(argsNo)
+        if not callable(funcNo):
+            return False
+        if argsNo != ():
+            if isinstance(argsNo, tuple):
+                return funcNo(*argsNo)
             else:
-                return funcNo()
-
-
-
+                return funcNo(argsNo)
+        else:
+            return funcNo()
 
 
 
@@ -150,11 +173,3 @@ class ClickableLabel(QLabel):
 
     def mousePressEvent(self, event):
         QDesktopServices.openUrl(QUrl(self.link))
-
-
-
-
-
-
-
-

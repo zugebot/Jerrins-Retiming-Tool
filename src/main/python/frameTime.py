@@ -28,28 +28,25 @@ class FrameTime:
 
 
     def renew(self) -> None:
-        self.milliseconds = self.backup_milliseconds
-        self._round_milliseconds()
+        self.milliseconds = self.roundValueMilliseconds(self.backup_milliseconds)
 
 
+    """
     def _round_milliseconds(self):
-        self.upper = self.milliseconds - self.milliseconds % 1000
-
-        milli = self.milliseconds / 1000 + 0.001
+        upper = self.milliseconds - self.milliseconds % 1000
+        milli = self.milliseconds / 1000 + (1 / self.fps) / 100 # + 0.001
         milli = milli - (milli % 1) % (1 / self.fps)
         milli = int(round(milli % 1, 3) * 1000)
-        # milli -= (milli % (1000 / self.fps))
-        self.milliseconds = self.upper + milli
+        self.milliseconds = upper + milli
+    """
 
 
     def roundValueMilliseconds(self, value):
-        self.upper = value - value % 1000
-
-        milli = value / 1000 + 0.001
+        upper = value - value % 1000
+        milli = value / 1000 + (1 / self.fps) / 100
         milli = milli - (milli % 1) % (1 / self.fps)
         milli = int(round(milli % 1, 3) * 1000)
-        # milli -= (milli % (1000 / self.fps))
-        value = self.upper + milli
+        value = upper + milli
         return value
 
 
@@ -97,9 +94,13 @@ class FrameTime:
 
 
     @staticmethod
-    def convertToSeconds(time_str: str, debug: bool = False) -> int:
-        time_str = time_str.replace("–", "-")
-        time_str = time_str.replace(" ", ":")
+    def convertToSeconds(time_str: str, dec_accuracy: int = 3) -> int:
+        for a, b in [["–", "-"], [" ", ":"]]:
+            time_str = time_str.replace(a, b)
+        # time_str = time_str.replace("–", "-")
+        # time_str = time_str.replace(" ", ":")
+        if time_str == "-":
+            time_str = "-0"
 
         is_negative = "-" in time_str
 
@@ -117,7 +118,10 @@ class FrameTime:
                 if index != len(times_split) - 1:
                     time_values.append(int(i))
                 else:
-                    time_values.append(int(i.ljust(3, "0")))
+                    decimal_offset = 10 ** dec_accuracy
+                    milli = int(decimal_offset * float("0." + i.ljust(dec_accuracy, "0")))
+                    time_values.append(milli)
+
 
         time_values = [-i if is_negative else i for i in time_values]
         time_values = list(reversed(time_values))
@@ -138,7 +142,9 @@ class FrameTime:
         self.setMilliseconds(milliseconds)
 
 
-    def getSign(self) -> bool:
+    def getSign(self, value: int = None) -> bool:
+        if value is not None:
+            return value < 0
         return self.milliseconds < 0
 
 
@@ -251,11 +257,15 @@ class FrameTime:
     def YTDebugInfo(self, text) -> [str, bool]:
         value = int(float(json.loads(text)['cmt']) * 1000)
         self.setMilliseconds(value)
+        self.milliseconds = self.roundValueMilliseconds(value)
 
 
 
     def getTotalTime(self, rounded=True) -> str:
         time_str: str = ""
+
+
+
         hours, minutes, seconds, milli = self.getTimeSections()
         if self.getSign():
             time_str += "–"
@@ -269,6 +279,8 @@ class FrameTime:
             time_str += "." + self.getMilliseconds3Str()
         else:
             time_str += "." + str(abs(self.backup_milliseconds) % 1000).rjust(3, "0")
+
+        # self.milliseconds = backup_milliseconds
         return time_str
 
 

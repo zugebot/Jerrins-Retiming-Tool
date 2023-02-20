@@ -16,29 +16,36 @@ from windowMain import WindowMain
 class AppContext(ApplicationContext):
     def run(self):
         app = QApplication([])
+        settings = Settings("1.04.0")
 
         palette = QPalette()
 
         palette.setColor(QPalette.Window, QColor(53, 53, 53))
-        palette.setColor(QPalette.WindowText, Qt.white)
-        palette.setColor(QPalette.Base, QColor(25, 25, 25))
         palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
-        palette.setColor(QPalette.ToolTipBase, Qt.black)
-        palette.setColor(QPalette.ToolTipText, Qt.white)
-        palette.setColor(QPalette.Text, Qt.white)
         palette.setColor(QPalette.Button, QColor(53, 53, 53))
-        palette.setColor(QPalette.ButtonText, Qt.white)
-        palette.setColor(QPalette.BrightText, Qt.red)
-        palette.setColor(QPalette.Link, text_cyan)
-        palette.setColor(QPalette.Highlight, text_cyan)
+
+        palette.setColor(QPalette.Base, QColor(25, 25, 25))
 
         palette.setColor(QPalette.HighlightedText, Qt.black)
+        palette.setColor(QPalette.ToolTipBase, Qt.black)
+
+        palette.setColor(QPalette.WindowText, Qt.white)
+        palette.setColor(QPalette.ToolTipText, Qt.white)
+        palette.setColor(QPalette.Text, Qt.white)
+        palette.setColor(QPalette.ButtonText, Qt.white)
+
+        # settings.getTextQColor()
+        text_color = settings.getTextQColor()
+        palette.setColor(QPalette.BrightText, text_color)
+        palette.setColor(QPalette.Link, text_color)
+        palette.setColor(QPalette.Highlight, text_color)
+
         app.setPalette(palette)
 
-        settings = Settings("1.04.0")
+
         app.setStyle(settings.getWindowStyle())
 
-        windowMain = WindowMain(app, settings)
+        windowMain = WindowMain(app, settings, palette)
         windowMain.show()
 
         return self.app.exec_()

@@ -13,7 +13,7 @@ import os
 from support import *
 from row import Row
 from frameTime import FrameTime
-from jLineEdit import TimeLineEdit
+from timeLineEdit import TimeLineEdit
 from windowSettings import WindowSettings
 
 
@@ -26,17 +26,23 @@ class WindowRetimer:
         self.rows: List[Row] = []
 
         self.saveFileName: str = self.settings.documentFolder + "save.json"
+        self.template: str = None
         self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignTop)
 
         # MAIN LAYOUT PARTS
+        self.topBar = QVBoxLayout()
         self.firstBar = QHBoxLayout()
         self.secondBar = QHBoxLayout()
+        self.topBar.addLayout(self.firstBar)
+        self.topBar.addLayout(self.secondBar)
+        self.topBar.setSizeConstraint(0)
+
         self.scrollArea = QScrollArea()
         self.bottomBar = QHBoxLayout()
         self.bottomBar.setAlignment(Qt.AlignTop)
-        self.layout.addLayout(self.firstBar)
-        self.layout.addLayout(self.secondBar)
+
+        self.layout.addLayout(self.topBar)
         self.layout.addWidget(self.scrollArea)
         self.layout.addLayout(self.bottomBar)
         # 1. first and second bar stuff
@@ -51,8 +57,8 @@ class WindowRetimer:
                                         timeEdit=False, change_func=self.updateFPS)
 
         self.buttonCopyMod = newButton("Copy Mod Message", None, self.copyModMessage)
-        self.buttonClearSplits = newButton("Clear Splits", 85, self.resetManagerSplits)
-        self.buttonClearTimes = newButton("Clear Times", 85, self.resetManagerTimes)
+        # self.buttonClearSplits = newButton("Clear Splits", 85, self.resetSplits)
+        # self.buttonClearTimes = newButton("Clear Times", 85, self.resetTimes)
 
         self.labelModMessage = QLineEdit()
         self.labelModMessage.setStyleSheet("background-color: dark-grey;")
@@ -62,8 +68,8 @@ class WindowRetimer:
         self.rowCountLabel = QLabel(f"Rows: {len(self.rows)}")
 
 
-        widgetList = [self.bAddRow, self.LabelFPS, self.LineEditFPS, self.buttonCopyMod,
-                      self.buttonClearSplits, self.buttonClearTimes]
+        widgetList = [self.bAddRow, self.LabelFPS, self.LineEditFPS, self.buttonCopyMod]
+                      # self.buttonClearSplits, self.buttonClearTimes]
         for widget in widgetList:
             self.firstBar.addWidget(widget)
 
@@ -85,6 +91,11 @@ class WindowRetimer:
 
 
 
+    def clearTitleTemplate(self):
+        self.template = None
+        self.parent.setTitle(self.template)
+
+
 
     def getFPS(self):
         return self.settings.get("fps")
@@ -94,9 +105,10 @@ class WindowRetimer:
         while len(self.rows) > 1:
             self.delRow()
         self.rows[0].clear()
+        self.clearTitleTemplate()
 
 
-    def resetTimes(self):
+    def _resetTimes(self):
         for row in self.rows:
             row.clear(swapSign=False)
 
@@ -105,7 +117,8 @@ class WindowRetimer:
         newRow = Row(self, len(self.rows))
         self.rows.append(newRow)
         self.rowForm.addRow(newRow.layout)
-        self.updateRowCount()
+        self.updateRowCountLabel()
+        self.clearTitleTemplate()
         return newRow
 
 
@@ -115,10 +128,18 @@ class WindowRetimer:
         rowIntToDelete = len(self.rows) - 1
         self.rowForm.removeRow(rowIntToDelete)
         self.rows.pop()
-        self.updateRowCount()
+        self.clearTitleTemplate()
+        self.updateRowCountLabel()
 
 
-    def updateRowCount(self):
+    def setRowCount(self, count: int = 1):
+        while len(self.rows) < count:
+            self.addRow()
+        while len(self.rows) > count:
+            self.delRow()
+
+
+    def updateRowCountLabel(self):
         self.rowCountLabel.setText(f"Rows: {len(self.rows)}")
 
 
@@ -138,7 +159,7 @@ class WindowRetimer:
             row.textTime1.time.updateFPS(self.getFPS())
             row.textTime2.time.updateFPS(self.getFPS())
             finalTime += row.textFinalTime.getValue()
-            subLoadTime += row.textSubLoad.getValue()
+            subLoadTime += row.textTimeSub.getValue()
 
             time1 = row.textTime1.getValue()
             if time1 < frameTime.timeStart:
@@ -153,43 +174,16 @@ class WindowRetimer:
         else:
             frameTime.setMilliseconds(finalTime)
             message = frameTime.createModMessage(self.settings.get("mod-message"))
+            message = message.replace("\n", "\\n")
             self.labelModMessage.setText(message)
 
 
+
     def updateSettings(self):
-        self.toggleSubLoads()
-        self.togglePasteButtons()
-        self.resizeRowWidgets()
-        self.updateRowHints()
+        for row in self.rows:
+            row.updateSettings()
         self.updateModTotalTime()
 
-
-    def resizeRowWidgets(self):
-        for row in self.rows:
-            row.resizeWidgets()
-
-
-    def updateRowHints(self):
-        for row in self.rows:
-            row.updateHints()
-
-
-    def toggleSubLoads(self):
-        for row in self.rows:
-            if self.settings.get("include-sub-loads"):
-                row.textSubLoad.show()
-            else:
-                row.textSubLoad.clear()
-                row.textSubLoad.hide()
-
-    def togglePasteButtons(self):
-        for row in self.rows:
-            if self.settings.get("include-paste-buttons"):
-                row.buttonPaste1.show()
-                row.buttonPaste2.show()
-            else:
-                row.buttonPaste1.hide()
-                row.buttonPaste2.hide()
 
 
     def updateFPS(self):
@@ -200,55 +194,125 @@ class WindowRetimer:
         for row in self.rows:
             row.updateTotalTime()
         self.updateModTotalTime()
-        print(f"updated FPS to {self.settings.get('fps')}")
 
 
 
     def copyModMessage(self):
         cb = QApplication.clipboard()
         cb.clear(mode=cb.Clipboard)
-        cb.setText(self.labelModMessage.text(), mode=cb.Clipboard)
+        message = self.labelModMessage.text()
+        message = message.replace("\\n", "\n")
+        cb.setText(message, mode=cb.Clipboard)
 
 
 
-    def resetManagerSplits(self):
+    def resetSplits(self):
         newQuestionBox(self.parent,
                        title="Reset Splits",
                        message="Are you sure to remove all rows and times?",
                        funcYes=self.resetRows)
+        self.template = None
+        self.parent.setTitle()
 
 
 
-    def resetManagerTimes(self):
+    def resetTimes(self):
         newQuestionBox(self.parent,
                        title="Reset Times",
                        message="Are you sure to remove all the times?",
-                       funcYes=self.resetTimes)
+                       funcYes=self._resetTimes)
 
 
-    def saveTimes(self):
+    def saveFile(self):
         rowData = [row.getDict() for row in self.rows]
-        write_json({"rows": rowData}, self.saveFileName)
+        data: dict = {
+            "notes"
+            "template": self.template,
+            "rows": rowData
+        }
+        write_json(data, self.saveFileName)
 
 
-    def viewFile(self):
-        self.saveTimes()
+    def viewDocumentFolder(self):
+        self.saveFile()
         self.settings.openFileDialog(self.saveFileName)
 
 
-    def loadTimes(self):
+    def loadSaveFile(self):
         data = read_json(self.saveFileName)
         if not data:
             return self.addRow()
 
         # populates the settings
         self.LineEditFPS.setText(self.getFPS())
+        self.updateSettings()
 
-        self.toggleSubLoads()
-        self.togglePasteButtons()
+        # update Title if using a template
+        self.template = data.get("display-name", None)
+        if self.template is not None:
+            self.parent.setTitle(self.template)
 
         # populate the row data
         for row_dict in data["rows"]:
             row = self.addRow()
             row.setDict(row_dict)
+
+
+    def createTemplate(self, name, filename):
+        data: dict = {
+            "display-name": name,
+            "notes": "",
+            "rows": []
+        }
+        item: dict = {
+            "sign-type": None
+        }
+
+        rows = self.parent.windowRetimer.rows
+        for row in rows:
+            _item = item.copy()
+            _item["sign-type"] = row.getSignValue()
+            data["rows"].append(_item)
+
+        write_json(data, filename)
+
+        self.parent.populateTemplates()
+
+
+
+    def loadTemplate(self, filename):
+        if not os.path.exists(filename):
+            self.parent.populateTemplates()
+            return
+
+        data = read_json(filename)
+
+        displayName = data.get("display-name", "None")
+        new_rows = data.get("rows", [])
+
+        # deletes rows
+        if len(self.rows) != len(new_rows):
+            title = "Confirm Load Template"
+            message = f"Loading \"{displayName}\"" \
+                      f"\nRow Count: {len(self.rows)} -> {len(new_rows)}" \
+                      f"\nConfirm by pressing yes."
+            status = newQuestionBox(self.parent, title, message)
+
+            if not status:
+                return
+
+        self.template = displayName
+        self.parent.setTitle(displayName)
+
+        self.setRowCount(len(new_rows))
+        for index, row in enumerate(self.rows):
+            row.setSignValue(new_rows[index]["sign-type"])
+
+
+
+
+
+
+
+
 
