@@ -17,7 +17,7 @@ from frameTime import FrameTime
 
 class TimeLineEdit(QLineEdit):
     def __init__(self,
-                 parent=None,
+                 row=None,
                  text: str = "",
                  maxLength: int = 32,
                  readOnly: bool = False,
@@ -32,8 +32,8 @@ class TimeLineEdit(QLineEdit):
                  hide: bool = False):
         super().__init__()
 
-
-        self.settings: Settings = parent.settings
+        self.row = row
+        self.settings: Settings = row.settings
         self.lastText: str = text
         self.setText(text)
         self.maxLength: int = maxLength
@@ -65,7 +65,6 @@ class TimeLineEdit(QLineEdit):
         self.menu = QMenu(self)
         self.initMenu()
 
-
     def updateHint(self):
         if self.settings.get("show-hints"):
             self.setPlaceholderText(self.placeHolderText)
@@ -77,13 +76,26 @@ class TimeLineEdit(QLineEdit):
         return self.settings.get("fps")
 
 
-    def initMenu(self):
-        palette = QPalette()
-        palette.setColor(QPalette.HighlightedText, text_cyan)
+    def updateColors(self):
+        try:
+            palette = self.row.parent.parent.palette
+        except:
+            palette = self.row.parent.palette
+        palette.setColor(QPalette.HighlightedText, self.settings.getTextQColor())
         self.menu.setPalette(palette)
+
+
+
+    def initMenu(self):
+        self.updateColors()
+        # palette = QPalette()
+        # palette.setColor(QPalette.HighlightedText, self.settings.getTextQColor())
+        # self.menu.setPalette(palette)
         addNewAction(self.menu, "Format Time", self.handleFormatTime)
         addNewAction(self.menu, "Remove Time", self.clear)
         addNewAction(self.menu, "Paste Frames[WIP]", self.handlePasteFrames)
+
+
 
 
     def handlePasteFrames(self):
@@ -92,8 +104,8 @@ class TimeLineEdit(QLineEdit):
 
     def handleFormatTime(self):
         if self.text() != "":
-            value = formatToTime(self.getValue(), self.getFPS())
-            self.setText(value)
+            frameTime = FrameTime(self.getValue(), self.getFPS())
+            self.setText(frameTime.getTotalTime())
 
 
     def setText(self, p_str):
@@ -118,6 +130,7 @@ class TimeLineEdit(QLineEdit):
             temp = self.cursorPosition() - lengthAdded
 
         text = text.replace("-", "–")
+        text = text.replace(" ", ":")
 
         self.setText(text[0:self.maxLength])
         self.setCursorPosition(temp)
@@ -140,14 +153,16 @@ class TimeLineEdit(QLineEdit):
 
         # parses youtube debug info
         if self.timeEdit:
+            print("is timeEdit")
             frameTime = FrameTime(fps=self.getFPS())
+            print(text)
             if frameTime.isYTDebug(text):
+                print("hi")
                 frameTime.YTDebugInfo(text)
-                value = frameTime.getTotalTime()
+                value = frameTime.getTotalTime(rounded=True)
                 return self.updateText(value)
 
-
-        # if the
+        # if the yes
         if self.time.isValidTime(text, self.allow_decimal, self.allow_negative):
             self.updateText(text[:self.maxLength])
         else:

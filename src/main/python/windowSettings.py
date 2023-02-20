@@ -4,6 +4,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPalette, QColor, QIcon
+from functools import partial
 
 # custom imports
 from support import *
@@ -22,13 +23,18 @@ class WindowSettings(QWidget):
 
         self.setFixedWidth(350)
 
+        # vars yay
+        bold_text = makeStyle(bold=True, text_color=self.settings.get("text-color"))
+
 
         # SETTINGS, preset
-        self._windowStyle = self.settings.get("window-style")
-        self._includePasteButtons = self.settings.get("include-paste-buttons")
-        self._includeSubLoads = self.settings.get("include-sub-loads")
-        self._showHints = self.settings.get("show-hints")
-        self._modMessage = self.settings.get("mod-message")
+        self.data = self.settings.getDict()
+
+        # self._windowStyle = self.settings.get("window-style")
+        # self._includePasteButtons = self.settings.get("include-paste-buttons")
+        # self._includeSubLoads = self.settings.get("include-sub-loads")
+        # self._showHints = self.settings.get("show-hints")
+        # self._modMessage = self.settings.get("mod-message")
 
 
 
@@ -45,27 +51,44 @@ class WindowSettings(QWidget):
         self.layout.addWidget(self.windowOptionsGroup)
 
 
+        # self.button.clicked.connect(partial(self.func, False))
 
         # window options
         self.styleLabel = QLabel("Window Style")
         self.styleCombo = QComboBox()
         self.styleCombo.addItems(self.settings.windowStyleList)
-        self.styleCombo.setCurrentIndex(self._windowStyle)
+        self.styleCombo.setCurrentIndex(self.data["window-style"])
         self.styleCombo.currentIndexChanged.connect(self.changeWindowStyle)
-        self.checkPaste = QCheckBox("Include Paste Buttons")
-        self.checkPaste.stateChanged.connect(self.checkboxChangedPasteButtons)
-        self.checkSubload = QCheckBox("Include Sub-load Textboxes")
-        self.checkSubload.stateChanged.connect(self.checkboxChangedSubLoads)
+
+        self.textColorLabel = QLabel("Theme Color\n[Needs Restart]")
+        self.textColorCombo = QComboBox()
+        self.textColorCombo.addItems(self.settings.textColorList)
+        self.textColorCombo.setCurrentIndex(self.data["text-color"])
+        self.textColorCombo.currentIndexChanged.connect(partial(self.comboBoxChanged, "text-color"))
+
+        self.checkPaste = QCheckBox("Show Paste Buttons")
+        self.checkPaste.stateChanged.connect(partial(self.checkboxStateChanged, "include-paste-buttons"))
+
+        self.checkSubload = QCheckBox("Show Sub-load Textboxes")
+        self.checkSubload.stateChanged.connect(partial(self.checkboxStateChanged, "include-sub-loads"))
+
+        self.checkSeparators = QCheckBox("Show Line Separators")
+        self.checkSeparators.stateChanged.connect(partial(self.checkboxStateChanged, "include-separator-lines"))
+
         self.checkShowHints = QCheckBox("Show Text Hints")
-        self.checkShowHints.stateChanged.connect(self.checkboxChangedShowHints)
+        self.checkShowHints.stateChanged.connect(partial(self.checkboxStateChanged, "show-hints"))
+
 
 
 
         self.windowSettingsGrid.addWidget(self.styleLabel, 0, 0)
         self.windowSettingsGrid.addWidget(self.styleCombo, 0, 1)
-        self.windowSettingsGrid.addWidget(self.checkPaste, 1, 0, 1, 4)
-        self.windowSettingsGrid.addWidget(self.checkSubload, 2, 0, 1, 4)
-        self.windowSettingsGrid.addWidget(self.checkShowHints, 3, 0, 1, 4)
+        self.windowSettingsGrid.addWidget(self.textColorLabel, 0, 2)
+        self.windowSettingsGrid.addWidget(self.textColorCombo, 0, 3)
+        self.windowSettingsGrid.addWidget(self.checkPaste, 2, 0, 1, 2)
+        self.windowSettingsGrid.addWidget(self.checkSubload, 2, 2, 1, 2)
+        self.windowSettingsGrid.addWidget(self.checkShowHints, 3, 0, 1, 2)
+        self.windowSettingsGrid.addWidget(self.checkSeparators, 3, 2, 1, 2)
 
 
 
@@ -79,9 +102,8 @@ class WindowSettings(QWidget):
         self.layout.addWidget(self.modOptionsGroup)
 
         # mod options
-
         self.learnClickLabel = ClickableLabel("Formatting Guide", self.settings.url_links["mod-message-formatting"])
-        self.learnClickLabel.setStyleSheet(bold_cyan)
+        self.learnClickLabel.setStyleSheet(bold_text)
 
         self.modMessageEdit = QTextEdit()
         self.modMessageEdit.textChanged.connect(self.modMessageChanged)
@@ -94,12 +116,12 @@ class WindowSettings(QWidget):
         self.exampleFrameTime.setStartAndEnd(5917, 36017)
 
         self.exampleLabel = QLabel("Current Formatted Example")
-        self.exampleLabel.setStyleSheet(bold_cyan)
+        self.exampleLabel.setStyleSheet(bold_text)
 
-        self.modSettingsGrid.addWidget(self.learnClickLabel, 0, 0, 1, 1)
-        self.modSettingsGrid.addWidget(self.modMessageEdit, 1, 0, 1, 1)
-        self.modSettingsGrid.addWidget(self.exampleLabel, 2, 0, 1, 1)
-        self.modSettingsGrid.addWidget(self.modMessageView, 3, 0, 1, 1)
+        self.modSettingsGrid.addWidget(self.learnClickLabel, 0, 1, 1, 1)
+        self.modSettingsGrid.addWidget(self.modMessageEdit, 1, 1, 1, 1)
+        self.modSettingsGrid.addWidget(self.exampleLabel, 2, 1, 1, 1)
+        self.modSettingsGrid.addWidget(self.modMessageView, 3, 1, 1, 1)
 
 
 
@@ -134,17 +156,30 @@ class WindowSettings(QWidget):
 
 
     def reloadSettingsScreen(self):
-        self.styleCombo.setCurrentIndex(self._windowStyle)
-        self.checkPaste.setChecked(self._includePasteButtons)
-        self.checkSubload.setChecked(self._includeSubLoads)
-        self.checkShowHints.setChecked(self._showHints)
-        self.modMessageEdit.setText(self._modMessage)
+        self.textColorCombo.setCurrentIndex(self.data["text-color"])
+        self.styleCombo.setCurrentIndex(self.data["window-style"])
+        self.checkPaste.setChecked(self.data["include-paste-buttons"])
+        self.checkSubload.setChecked(self.data["include-sub-loads"])
+        self.checkShowHints.setChecked(self.data["show-hints"])
+        self.modMessageEdit.setText(self.data["mod-message"])
+        self.checkSeparators.setChecked(self.data["include-separator-lines"])
+
+
+
+
+
+    def checkboxStateChanged(self, key, state):
+        self.data[key] = (state == Qt.Checked)
+
+
+    def comboBoxChanged(self, key, index):
+        self.data[key] = index
 
 
     def changeWindowStyle(self, i):
-        self._windowStyle = i
+        self.data["window-style"] = i
 
-
+    """
     def checkboxChangedPasteButtons(self, state):
         self._includePasteButtons = (state == Qt.Checked)
 
@@ -155,25 +190,22 @@ class WindowSettings(QWidget):
 
     def checkboxChangedShowHints(self, state):
         self._showHints = (state == Qt.Checked)
-
+    """
 
     def modMessageChanged(self):
-        self._modMessage = self.modMessageEdit.toPlainText()
-        message = self.exampleFrameTime.createModMessage(self._modMessage)
+        self.data["mod-message"] = self.modMessageEdit.toPlainText()
+        message = self.exampleFrameTime.createModMessage(self.data["mod-message"])
         self.modMessageView.setText(message)
         scroll_val = self.modMessageEdit.verticalScrollBar().value()
         self.modMessageView.verticalScrollBar().setValue(scroll_val)
+
 
     def modMessageEditScrolled(self, value):
         self.modMessageView.verticalScrollBar().setValue(value)
 
 
     def restoreDefaults(self):
-        self._windowStyle = self.settings.default["window-style"]
-        self._includePasteButtons = self.settings.default["include-paste-buttons"]
-        self._includeSubLoads = self.settings.default["include-sub-loads"]
-        self._showHints = self.settings.default["show-hints"]
-        self._modMessage = self.settings.default["mod-message"]
+        self.data = self.settings.default.copy()
         self.reloadSettingsScreen()
 
 
@@ -187,10 +219,8 @@ class WindowSettings(QWidget):
 
 
     def applySettings(self):
-        self.settings.set("window-style", self._windowStyle)
-        self.settings.set("include-sub-loads", self._includeSubLoads)
-        self.settings.set("include-paste-buttons", self._includePasteButtons)
-        self.settings.set("show-hints", self._showHints)
-        self.settings.set("mod-message", self._modMessage)
+        for key in self.data:
+            self.settings.set(key, self.data[key])
         self.settings.save()
         self.parent.updateSettings()
+
