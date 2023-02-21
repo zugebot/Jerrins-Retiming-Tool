@@ -27,6 +27,8 @@ class WindowMain(QMainWindow):
         self.settings = settings
         self.palette: QPalette = palette
 
+        # self.setWindowOpacity(1)
+
         self.latestUrl: str = ""
 
         self.windowRetimer: WindowRetimer = WindowRetimer(self)
@@ -34,6 +36,7 @@ class WindowMain(QMainWindow):
         self.windowSettings: WindowSettings = None
         self.windowAddPage: WindowAddPage = None
 
+        self.widget: QWidget = None
         self.initUI()
 
         self.menuBar: QMenuBar = self.menuBar()
@@ -83,13 +86,19 @@ class WindowMain(QMainWindow):
     def initUI(self):
         self.setTitle("Speedrun Retimer")
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setMinimumSize(280, 205)
+        # self.setMinimumSize(280, 205)
         self.setMaximumSize(450, 390)
-        widget = QWidget()
-        widget.setLayout(self.windowRetimer.layout)
-        widget.setMaximumHeight(self.windowRetimer.layout.sizeHint().height())
-        widget.setMinimumWidth(self.windowRetimer.rowForm.sizeHint().width())
-        self.setCentralWidget(widget)
+        self.widget = QWidget()
+        self.widget.setLayout(self.windowRetimer.layout)
+        self.setCentralWidget(self.widget)
+
+        # Set the minimum size of the WindowMain object
+        self.setMinimumSize(self.windowRetimer.minimum_size())
+
+
+    def update_minimum_size(self):
+        # Update the minimum size of the WindowMain object based on the minimum size of the WindowRetimer object
+        self.setMinimumSize(self.windowRetimer.minimum_size())
 
 
     def setTitle(self, *args):
@@ -156,7 +165,7 @@ class WindowMain(QMainWindow):
         addNewIconAction(self, fileMenu, self.iconify("document"), "&Open Folder", self.windowRetimer.viewDocumentFolder, "Ctrl+O")
         addNewIconAction(self, fileMenu, self.iconify("skull.png"), "Clear Splits", self.windowRetimer.resetSplits, "Ctrl+Z")
         addNewIconAction(self, fileMenu, self.iconify("skull.png"), "Clear Times", self.windowRetimer.resetTimes, "Ctrl+X")
-        addNewIconAction(self, fileMenu, self.iconify("gear2.png"), "&Settings", self.openWindowSettings, "Ctrl+S")
+        addNewIconAction(self, fileMenu, self.iconify("gear2.png"), "&Settings", self.openWindowSettings, "Ctrl+A")
 
 
         templateMenu: QMenu = self.menuBar.addMenu("Templates")
@@ -168,15 +177,14 @@ class WindowMain(QMainWindow):
 
 
         websiteMenu: QMenu = self.menuBar.addMenu("Websites")
-        addNewIconAction(self, websiteMenu, self.iconify("trophy2.png"), "&Moderation Hub", partial(self.settings.openLink, "modhub"), "Ctrl+M")
+        addNewIconAction(self, websiteMenu, self.iconify("trophy2.png"), "&Moderation Hub", partial(self.settings.openLink, "modhub"), "Ctrl+Q")
         addNewIconAction(self, websiteMenu, self.iconify("globe2.png"), "&Edit Pages [TBD]", self.openWindowAddPage, "Ctrl+E")
 
 
         aboutMenu: QMenu = self.menuBar.addMenu("About")
-        addNewIconAction(self, aboutMenu, self.iconify("github2.png"), "&Github Page", partial(self.settings.openLink, "github"), "Ctrl+G")
+        addNewIconAction(self, aboutMenu, self.iconify("github2.png"), "&Github Page", partial(self.settings.openLink, "github"), "Ctrl+R")
         addNewAction(aboutMenu, "&Help", partial(self.settings.openLink, "website"), "Ctrl+H")
         addNewAction(aboutMenu, "C&redits", self.showCredits, "Ctrl+R")
-
 
 
     def populateTemplates(self):

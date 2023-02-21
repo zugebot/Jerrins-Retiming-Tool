@@ -142,4 +142,4 @@ class Settings:
 
 
     def openLink(self, link):
-        webbrowser.open(link)
+        webbrowser.open(self.url_links[link])

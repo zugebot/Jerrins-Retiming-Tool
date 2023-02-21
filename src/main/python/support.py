@@ -1,4 +1,5 @@
 # Jerrin Shirks
+import typing
 
 # native imports
 
@@ -124,16 +125,29 @@ def newCheckbox(menu, text_str="", checkable=True, checked=True, func=None):
         action.triggered.connect(func)
 
 
-def newButton(text="", fixed_width=None, func=None, hide=None, style_sheet=None):
+def newButton(text="", width=None, func=None, hide=None,
+              styleSheet=None, minWidth=None, maxWidth=None):
     button: QPushButton = QPushButton(text)
-    if fixed_width is not None:
-        button.setFixedWidth(fixed_width)
+
+    if width is not None:
+        button.setFixedWidth(width)
+
+    if minWidth:
+        button.setMinimumWidth(minWidth)
+    elif width:
+        button.setMinimumWidth(width)
+
+    if maxWidth:
+        button.setMaximumWidth(maxWidth)
+    elif width:
+        button.setMaximumWidth(width)
+
     if callable(func):
         button.clicked.connect(func)
     if hide:
         button.hide()
-    if style_sheet is not None:
-        button.setStyleSheet(style_sheet)
+    if styleSheet is not None:
+        button.setStyleSheet(styleSheet)
     return button
 
 
@@ -163,7 +177,6 @@ def newQuestionBox(root, title="", message="", funcYes=None, funcNo=None, argsYe
             return funcNo()
 
 
-
 class ClickableLabel(QLabel):
     def __init__(self, text, link):
         super().__init__()
@@ -173,9 +186,6 @@ class ClickableLabel(QLabel):
 
     def mousePressEvent(self, event):
         QDesktopServices.openUrl(QUrl(self.link))
-
-
-
 
 
 def placeOnSide(root, newWidth, newHeight, direction):
@@ -188,7 +198,6 @@ def placeOnSide(root, newWidth, newHeight, direction):
         if newLeft < screen.left():
             newLeft = root.geometry().right()
 
-
         return newLeft, newTop, newWidth, newHeight
 
 
@@ -200,13 +209,93 @@ def removeChildren(layout):
             widget.deleteLater()
 
 
+def newQObject(
+        self=None,
+
+        text: str = "",
+        temp: str = None,
+
+        readOnly: bool = None,
+
+        func=None,
+
+        width: int = None,
+        height: int = None,
+
+        spacing: int = None,
+        alignment=None,
+        sizeConstraint=None,
+
+        minWidth: int = None,
+        maxWidth: int = None,
+        minHeight: int = None,
+        maxHeight: int = None,
+
+        margins: list = None,
+
+        styleSheet: str = None,
+        hidden: bool = None):
+
+    self = self()
+
+    if text:
+        self.setText(text)
+    if temp:
+        self.setPlaceholderText(temp)
+
+    if hidden is not None:
+        if hidden is True:
+            self.setHidden(hidden)
+
+    if isinstance(self, QLayout):
+        if spacing:
+            self.setSpacing(spacing)
+        if alignment:
+            self.setAlignment(alignment)
+        if sizeConstraint:
+            self.setSizeConstraint(sizeConstraint)
 
 
+    if width is not None:
+        self.setFixedWidth(width)
 
+    if minWidth:
+        self.setMinimumWidth(minWidth)
+    elif width:
+        self.setMinimumWidth(width)
 
+    if maxWidth:
+        self.setMaximumWidth(maxWidth)
+    elif width:
+        self.setMaximumWidth(width)
 
+    if height:
+        self.setFixedHeight(height)
 
+    if minHeight:
+        self.setMinimumHeight(minHeight)
+    elif height:
+        self.setMinimumHeight(height)
 
+    if maxHeight:
+        self.setMaximumHeight(maxHeight)
+    elif height:
+        self.setMaximumHeight(height)
 
+    if margins:
+        self.setContentsMargins(*margins)
 
+    if readOnly is not None:
+        self.setReadOnly(readOnly)
+
+    if styleSheet:
+        self.setStyleSheet(styleSheet)
+
+    if callable(func):
+        if isinstance(self, QLineEdit):
+            self.textChanged[str].connect(func)
+        elif isinstance(self, QPushButton):
+            self.clicked.connect(func)
+
+    return self
 

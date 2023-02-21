@@ -12,59 +12,70 @@ from frameTime import FrameTime
 
 
 class Row:
-    def __init__(self, parent, number, showIndex=True, style=1):
+    def __init__(self, root, number, showIndex=True, style=1):
 
         # variables
-        self.parent = parent
-        self.settings = parent.settings
+        self.style = None
+        self.root = root
+        self.settings = root.settings
         self.number = number
         self.signType = 1
         self.showIndex = showIndex
 
-        # easier time
-        hidePaste = not self.settings.get("include-paste-buttons")
-        hideSubLoad = not self.settings.get("include-sub-loads")
 
-        # add widgets
-        txt_color = self.settings.getTextQColor()
-        bkg_color = makeStyle(bkg_color=self.settings.get("background-color"))
-        self.buttonSignType = newButton(f"+{number + 1}", 30, self.swapSignValue,
-                                        style_sheet=makeStyle(text_color=txt_color))
-        self.buttonPaste1 = newButton("Paste", 45, self.pasteIntoTextBox1, hide=hidePaste)
-        self.buttonPaste2 = newButton("Paste", 45, self.pasteIntoTextBox2, hide=hidePaste)
-        self.textTime1 = TimeLineEdit(self, styleSheet=bkg_color, placeHolder="Start...",
-                                      change_func=self.updateTotalTime)
-        self.textTime2 = TimeLineEdit(self, styleSheet=bkg_color, placeHolder="End...",
-                                      change_func=self.updateTotalTime)
-        self.textTimeSub = TimeLineEdit(self, styleSheet=bkg_color, placeHolder="Sub...",
-                                        change_func=self.updateTotalTime,
-                                        maxLength=4, hide=hideSubLoad, allow_decimal=False)
-        self.textFinalTime = TimeLineEdit(self, styleSheet=bkg_color, placeHolder="Total...", readOnly=True)
-
-        self.labels = [QLabel(), QLabel(), QLabel()]
-        self.widgets = [self.buttonSignType,  # 0
-                        self.buttonPaste1,  # 1
-                        self.textTime1,  # 2
-                        self.buttonPaste2,  # 3
-                        self.textTime2,  # 4
-                        self.textTimeSub,  # 5
-                        self.textFinalTime]  # 6
 
 
         self.layout: QWidget = QWidget()
         self.layout.setContentsMargins(0, 0, 0, 0)
 
         self.container: QVBoxLayout = QVBoxLayout()
+        self.container.setSizeConstraint(QLayout.SetMinimumSize)
+
         self.layout.setLayout(self.container)
         self.container.setContentsMargins(0, 0, 0, 0)
         self.layout.setStyleSheet("background-color: rgb(40,40,40);")
 
-        self.style = style
-        if self.style == 1:
-            self.setStyle1()
-        elif self.style == 2:
-            self.setStyle1()
-            # self.setStyle2()
+
+        # easier time
+
+        hideSubLoad = not self.settings.get("include-sub-loads")
+
+
+        # widget presets
+        txt_color = self.settings.getTextQColor()
+        bkg_color = makeStyle(bkg_color=self.settings.get("background-color"))
+        k_style_sign = {"styleSheet": makeStyle(text_color=txt_color) + "padding: 0px;"}
+        k_style_button = {"minHeight": 22}
+        k_style_text = {"styleSheet": bkg_color}
+        k_paste = {
+            "text": "Paste",
+            "width": 45,
+            "hidden": not self.settings.get("include-paste-buttons")
+        }
+        k_text = {
+            "minWidth": 60,
+            "maxWidth": 120,
+        }
+        k_update = {
+            "change_func": self.updateTotalTime
+        }
+
+        # add widgets
+        self.buttonSignType = newQObject(QPushButton, text=f"+{number + 1}", width=30, func=self.swapSignValue, **k_style_button, **k_style_sign)
+        self.buttonPaste1 = newQObject(QPushButton, func=self.pasteIntoTextBox1, **k_paste, **k_style_button)
+        self.buttonPaste2 = newQObject(QPushButton, func=self.pasteIntoTextBox2, **k_paste, **k_style_button)
+        self.textTime1 = TimeLineEdit(self, temp="Start...", **k_text, **k_update, **k_style_text)
+        self.textTime2 = TimeLineEdit(self, temp="End...", **k_text, **k_update, **k_style_text)
+        self.textTimeSub = TimeLineEdit(self, temp="Sub...", width=40, maxLength=4, hide=hideSubLoad,
+                                        allow_decimal=False, **k_style_text, **k_update)
+        self.textFinalTime = TimeLineEdit(self, temp="Total...", readOnly=True, **k_text, **k_style_text)
+
+        # make list
+        self.widgets = [self.buttonSignType, self.buttonPaste1, self.textTime1, self.buttonPaste2,
+                        self.textTime2, self.textTimeSub, self.textFinalTime]
+
+        self.setStyle1()
+
 
     def setStyle1(self):
         removeChildren(self.container)
@@ -104,24 +115,30 @@ class Row:
         grid.addWidget(self.widgets[6], 4, 0, 2, 1)
 
     def resizeWidgets(self):
+        self.layout.setMinimumSize(self.container.minimumSize())
+        """
         widgets = [self.buttonSignType,
                    self.buttonPaste1, self.textTime1, self.buttonPaste2,
                    self.textTime2, self.textTimeSub, self.textFinalTime]
 
-        widths = [
-            [None, None, 80, None, 80, None, 80],  # pastes and subload not showing 0
-            [None, 43, 80, 43, 80, None, 80],  # subload not showing 1
-            [None, None, 80, None, 80, 34, 80],  # pastes not showing 2
-            [None, 43, 80, 43, 80, 34, 80]  # all showing 3
+        widthsBool = [
+            [False, False,  True, False,  True, False,  True],  # pastes and subload not showing 0
+            [False,  True,  True,  True,  True, False,  True],  # subload not showing 1
+            [False, False,  True, False,  True,  True,  True],  # pastes not showing 2
+            [False,  True,  True,  True,  True,  True,  True]   # all showing 3
         ]
 
         settingIndex = self.settings.get("include-paste-buttons") + 2 * self.settings.get("include-sub-loads")
         for n, widget in enumerate(widgets):
+            if widthsBool[settingIndex][n]
             value = widths[settingIndex][n]
             if value is None or value == -1:
-                widget.setMinimumWidth(0)
+                widget.setWidth(0)
             else:
-                widget.setMinimumWidth(value)
+                widget.setWidth(value)
+        """
+        pass
+
 
     def getSignValue(self):
         return self.signType
@@ -188,7 +205,7 @@ class Row:
         if self.textTime1.text() == "":
             self.textTime1.setText(clipboardText)
             return
-        newQuestionBox(self.parent.parent,
+        newQuestionBox(self.root.root,
                        message=f"Are you sure you want to paste?\n"
                                f"Current     : {self.textTime1.text()}\n"
                                f"Clipboard : {clipboardText[:20]}",
@@ -200,7 +217,7 @@ class Row:
         if self.textTime2.text() == "":
             self.textTime2.setText(clipboardText)
             return
-        newQuestionBox(self.parent.parent,
+        newQuestionBox(self.root.root,
                        message=f"Are you sure you want to paste?\n"
                                f"Current     : {self.textTime2.text()}\n"
                                f"Clipboard : {clipboardText[:20]}",
@@ -216,11 +233,22 @@ class Row:
                 self.swapSignValue()
 
     def getDict(self):
+        """
         return {"sign-type": self.signType,
                 "time-start": self.textTime1.text(),
                 "time-sub": self.textTimeSub.text(),
                 "time-end": self.textTime2.text()
                 }
+        """
+        data: dict = {"sign-type": self.signType}
+        if self.textTime1.text() != "":
+            data["time-start"] = self.textTime1.text()
+        if self.textTimeSub.text() != "":
+            data["time-sub"] = self.textTimeSub.text()
+        if self.textTime2.text() != "":
+            data["time-end"] = self.textTime2.text()
+        return data
+
 
     def setDict(self, data: dict):
         if data.get("sign-type", 1) == -1:
@@ -240,7 +268,7 @@ class Row:
 
         if self.textTime1.isEmpty() or self.textTime2.isEmpty():
             self.textFinalTime.clear()
-            self.parent.updateModTotalTime()
+            self.root.updateModTotalTime()
             return
 
         value = self.signType * abs(time2 - time1) + subLoad
@@ -250,4 +278,4 @@ class Row:
 
         self.textFinalTime.setText(totalTime)
         if updateMod:
-            self.parent.updateModTotalTime()
+            self.root.updateModTotalTime()

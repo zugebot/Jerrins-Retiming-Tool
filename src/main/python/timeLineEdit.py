@@ -25,10 +25,12 @@ class TimeLineEdit(QLineEdit):
                  allow_negative: bool = True,
                  change_func=None,
                  timeEdit: bool = True,
-                 fixedWidth: int = None,
+                 width: int = None,
+                 minWidth: int = None,
+                 maxWidth: int = None,
                  centerText: bool = True,
                  styleSheet: str = None,
-                 placeHolder: str = None,
+                 temp: str = None,
                  hide: bool = False):
         super().__init__()
 
@@ -47,8 +49,12 @@ class TimeLineEdit(QLineEdit):
         self.time = FrameTime()
 
 
-        if fixedWidth:
-            self.setFixedWidth(fixedWidth)
+        if width:
+            self.setFixedWidth(width)
+        if minWidth:
+            self.setMinimumWidth(minWidth)
+        if maxWidth:
+            self.setMaximumWidth(maxWidth)
         if centerText:
             self.setAlignment(Qt.AlignCenter)
         if self.readOnly:
@@ -56,7 +62,7 @@ class TimeLineEdit(QLineEdit):
         if styleSheet:
             self.setStyleSheet(styleSheet)
         self.textChanged[str].connect(self.isValid)
-        self.placeHolderText = placeHolder
+        self.placeHolderText = temp
         if self.settings.get("show-hints"):
             self.setPlaceholderText(self.placeHolderText)
         if hide:
@@ -78,9 +84,9 @@ class TimeLineEdit(QLineEdit):
 
     def updateColors(self):
         try:
-            palette = self.row.parent.parent.palette
+            palette = self.row.root.root.palette
         except:
-            palette = self.row.parent.palette
+            palette = self.row.root.palette
         palette.setColor(QPalette.HighlightedText, self.settings.getTextQColor())
         self.menu.setPalette(palette)
 

@@ -3,7 +3,7 @@ from typing import List
 
 # native imports
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QPalette, QColor, QIcon
 import subprocess
 import webbrowser
@@ -20,18 +20,17 @@ from windowSettings import WindowSettings
 
 
 class WindowRetimer:
-    def __init__(self, parent):
-        self.parent = parent
-        self.settings = parent.settings
-        # self.rowManager: RowManager = RowManager(self)
+    def __init__(self, root):
+        self.root = root
+        self.settings = root.settings
+
         self.rows: List[Row] = []
 
         self.saveFileName: str = self.settings.documentFolder + "save.json"
         self.template: str = None
 
-        self.layout = QVBoxLayout()
-        self.layout.setAlignment(Qt.AlignTop)
 
+        self.layout = newQObject(QVBoxLayout, alignment=Qt.AlignTop)
 
 
         # MAIN LAYOUT PARTS
@@ -42,36 +41,25 @@ class WindowRetimer:
         self.topBar.addLayout(self.secondBar)
         self.topBar.setSizeConstraint(0)
 
-        self.scrollArea = QScrollArea()
-        self.bottomBar = QHBoxLayout()
-        self.bottomBar.setAlignment(Qt.AlignTop)
+        self.scrollArea = newQObject(QScrollArea, alignment=Qt.AlignTop)
+        self.bottomBar = newQObject(QHBoxLayout, alignment=Qt.AlignTop)
 
         self.layout.addLayout(self.topBar)
         self.layout.addWidget(self.scrollArea)
         self.layout.addLayout(self.bottomBar)
         # 1. first and second bar stuff
 
-        self.bAddRow = newButton("Add Row", 80, self.addRow)
-        self.bDelRow = newButton("Del Row", 80, self.delRow)
-
-        self.LabelFPS = QLabel("FPS")
-        self.LabelFPS.setFixedWidth(20)
-
-        self.LineEditFPS = TimeLineEdit(self, text="30", maxLength=3, allow_decimal=False, fixedWidth=30,
+        self.bAddRow = newQObject(QPushButton, text="AddRow", width=80, func=self.addRow)
+        self.bDelRow = newQObject(QPushButton, text="Del Row", width=80, func=self.delRow)
+        self.LabelFPS = newQObject(QLabel, text="FPS", width=20)
+        self.LineEditFPS = TimeLineEdit(self, text="30", maxLength=3, allow_decimal=False, width=30,
                                         timeEdit=False, change_func=self.updateFPS)
-
-        self.buttonCopyMod = newButton("Copy Mod Message", None, self.copyModMessage)
-
-        self.labelModMessage = QLineEdit()
-        self.labelModMessage.setStyleSheet("background-color: dark-grey;")
-        self.labelModMessage.setReadOnly(True)
-        self.labelModMessage.setPlaceholderText("Mod Message...")
-
+        self.buttonCopyMod = newQObject(QPushButton, text="Copy Mod Message", func=self.copyModMessage)
+        self.labelModMessage = newQObject(QLineEdit, temp="Mod Message...", readOnly=True, styleSheet="background-color: dark-grey;")
         self.rowCountLabel = QLabel(f"Rows: {len(self.rows)}")
 
 
-        widgetList = [self.bAddRow, self.LabelFPS, self.LineEditFPS, self.buttonCopyMod]
-        for widget in widgetList:
+        for widget in [self.bAddRow, self.LabelFPS, self.LineEditFPS, self.buttonCopyMod]:
             self.firstBar.addWidget(widget)
 
         self.secondBar.addWidget(self.bDelRow)
@@ -79,27 +67,46 @@ class WindowRetimer:
         self.secondBar.addWidget(self.labelModMessage)
 
         # 3. scroll area stuff
-        self.rowForm = QFormLayout()
-        self.rowForm.setContentsMargins(0, 0, 0, 0)
-        self.rowForm.setSpacing(2)
-        self.rowForm.setAlignment(Qt.AlignTop)
+        self.rowForm = newQObject(QFormLayout, margins=(0, 0, 0, 0), spacing=2, alignment=Qt.AlignTop, sizeConstraint=QLayout.SetMinimumSize)
 
-        # self.layout.setMinimumWidth(self.rowForm.minimumSizeHint().width())
-        # self.layout.setSizeConstraint(self.rowForm.sizeHint().width())
+
 
         self.scrollWidget = QWidget()
         self.scrollWidget.setLayout(self.rowForm)
         self.scrollArea.setWidget(self.scrollWidget)
 
+        self.maxRowFormHeight = 295
         self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setMaximumHeight(295)
+        self.scrollArea.setMaximumHeight(self.maxRowFormHeight)
         self.scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
+    def minimum_size(self):
+        # Get the minimum size required by the WindowRetimer object based on the minimum size of the Row objects
+        # return self.scrollArea.minimumSize()
+
+        # width
+        width = 0
+        if self.rows:
+            width = 0
+            count = 0
+            for i in self.rows[0].widgets:
+                if not i.isHidden():
+                    width += i.minimumWidth()
+                    count += 1
+                else:
+                    "do nothing"
+            width += self.rows[0].container.spacing() * (count + 2)
+            width += self.layout.spacing() * 4
+
+        if self.rows:
+            return QSize(width, self.scrollArea.minimumHeight())
+        else:
+            return self.scrollArea.minimumSize()
 
 
     def clearTitleTemplate(self):
         self.template = None
-        self.parent.setTitle(self.template)
+        self.root.setTitle(self.template)
 
 
 
@@ -111,7 +118,6 @@ class WindowRetimer:
         while len(self.rows) > 1:
             self.delRow()
         self.rows[0].clear()
-        # self.rows[0].setStyle2()
         self.clearTitleTemplate()
 
 
@@ -121,23 +127,13 @@ class WindowRetimer:
 
 
     def addRow(self):
-        if len(self.rows) == 0:
-            newRow = Row(self, len(self.rows), style=2)
-
-
-        else:
-            newRow = Row(self, len(self.rows), style=1)
-            # self.scrollArea.setFixedHeight(295)
+        newRow = Row(self, len(self.rows))
         self.rows.append(newRow)
         self.rowForm.addRow(newRow.layout)
         self.updateRowCountLabel()
         self.clearTitleTemplate()
 
-        if len(self.rows) == 1:
-            self.rows[0].setStyle2()
-        else:
-            self.rows[0].setStyle1()
-
+        self.root.update_minimum_size()
         self.scrollArea.verticalScrollBar().setValue(self.scrollArea.verticalScrollBar().maximum())
 
         return newRow
@@ -152,8 +148,6 @@ class WindowRetimer:
         self.clearTitleTemplate()
         self.updateRowCountLabel()
 
-        if len(self.rows) == 1:
-            self.rows[0].setStyle2()
 
     def setRowCount(self, count: int = 1):
         while len(self.rows) < count:
@@ -203,9 +197,13 @@ class WindowRetimer:
 
 
     def updateSettings(self):
+        print("updating size!")
+        self.minimum_size()
         for row in self.rows:
             row.updateSettings()
+        self.minimum_size()
         self.updateModTotalTime()
+        self.minimum_size()
 
 
 
@@ -230,17 +228,17 @@ class WindowRetimer:
 
 
     def resetSplits(self):
-        newQuestionBox(self.parent,
+        newQuestionBox(self.root,
                        title="Reset Splits",
                        message="Are you sure to remove all rows and times?",
                        funcYes=self.resetRows)
         self.template = None
-        self.parent.setTitle()
+        self.root.setTitle()
 
 
 
     def resetTimes(self):
-        newQuestionBox(self.parent,
+        newQuestionBox(self.root,
                        title="Reset Times",
                        message="Are you sure to remove all the times?",
                        funcYes=self._resetTimes)
@@ -273,7 +271,7 @@ class WindowRetimer:
         # update Title if using a template
         self.template = data.get("display-name", None)
         if self.template is not None:
-            self.parent.setTitle(self.template)
+            self.root.setTitle(self.template)
 
         # populate the row data
         for row_dict in data["rows"]:
@@ -291,7 +289,7 @@ class WindowRetimer:
             "sign-type": None
         }
 
-        rows = self.parent.windowRetimer.rows
+        rows = self.root.windowRetimer.rows
         for row in rows:
             _item = item.copy()
             _item["sign-type"] = row.getSignValue()
@@ -299,13 +297,13 @@ class WindowRetimer:
 
         write_json(data, filename)
 
-        self.parent.populateTemplates()
+        self.root.populateTemplates()
 
 
 
     def loadTemplate(self, filename):
         if not os.path.exists(filename):
-            self.parent.populateTemplates()
+            self.root.populateTemplates()
             return
 
         data = read_json(filename)
@@ -319,13 +317,13 @@ class WindowRetimer:
             message = f"Loading \"{displayName}\"" \
                       f"\nRow Count: {len(self.rows)} -> {len(new_rows)}" \
                       f"\nConfirm by pressing yes."
-            status = newQuestionBox(self.parent, title, message)
+            status = newQuestionBox(self.root, title, message)
 
             if not status:
                 return
 
         self.template = displayName
-        self.parent.setTitle(displayName)
+        self.root.setTitle(displayName)
 
         self.setRowCount(len(new_rows))
         for index, row in enumerate(self.rows):
