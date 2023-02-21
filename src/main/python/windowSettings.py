@@ -30,14 +30,6 @@ class WindowSettings(QWidget):
         # SETTINGS, preset
         self.data = self.settings.getDict()
 
-        # self._windowStyle = self.settings.get("window-style")
-        # self._includePasteButtons = self.settings.get("include-paste-buttons")
-        # self._includeSubLoads = self.settings.get("include-sub-loads")
-        # self._showHints = self.settings.get("show-hints")
-        # self._modMessage = self.settings.get("mod-message")
-
-
-
         # CREATES THE WINDOW
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
@@ -72,9 +64,6 @@ class WindowSettings(QWidget):
         self.checkSubload = QCheckBox("Show Sub-load Textboxes")
         self.checkSubload.stateChanged.connect(partial(self.checkboxStateChanged, "include-sub-loads"))
 
-        self.checkSeparators = QCheckBox("Show Line Separators")
-        self.checkSeparators.stateChanged.connect(partial(self.checkboxStateChanged, "include-separator-lines"))
-
         self.checkShowHints = QCheckBox("Show Text Hints")
         self.checkShowHints.stateChanged.connect(partial(self.checkboxStateChanged, "show-hints"))
 
@@ -88,7 +77,6 @@ class WindowSettings(QWidget):
         self.windowSettingsGrid.addWidget(self.checkPaste, 2, 0, 1, 2)
         self.windowSettingsGrid.addWidget(self.checkSubload, 2, 2, 1, 2)
         self.windowSettingsGrid.addWidget(self.checkShowHints, 3, 0, 1, 2)
-        self.windowSettingsGrid.addWidget(self.checkSeparators, 3, 2, 1, 2)
 
 
 
@@ -162,10 +150,6 @@ class WindowSettings(QWidget):
         self.checkSubload.setChecked(self.data["include-sub-loads"])
         self.checkShowHints.setChecked(self.data["show-hints"])
         self.modMessageEdit.setText(self.data["mod-message"])
-        self.checkSeparators.setChecked(self.data["include-separator-lines"])
-
-
-
 
 
     def checkboxStateChanged(self, key, state):
@@ -179,18 +163,6 @@ class WindowSettings(QWidget):
     def changeWindowStyle(self, i):
         self.data["window-style"] = i
 
-    """
-    def checkboxChangedPasteButtons(self, state):
-        self._includePasteButtons = (state == Qt.Checked)
-
-
-    def checkboxChangedSubLoads(self, state):
-        self._includeSubLoads = (state == Qt.Checked)
-
-
-    def checkboxChangedShowHints(self, state):
-        self._showHints = (state == Qt.Checked)
-    """
 
     def modMessageChanged(self):
         self.data["mod-message"] = self.modMessageEdit.toPlainText()
@@ -223,4 +195,3 @@ class WindowSettings(QWidget):
             self.settings.set(key, self.data[key])
         self.settings.save()
         self.parent.updateSettings()
-

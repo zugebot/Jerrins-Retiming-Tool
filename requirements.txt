@@ -1,0 +1,4 @@
+requests
+fbs
+fbs-tutorial
+beautifulsoup4

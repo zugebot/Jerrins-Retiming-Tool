@@ -173,3 +173,40 @@ class ClickableLabel(QLabel):
 
     def mousePressEvent(self, event):
         QDesktopServices.openUrl(QUrl(self.link))
+
+
+
+
+
+def placeOnSide(root, newWidth, newHeight, direction):
+    screen = QApplication.desktop().screenGeometry()
+    newTop = root.geometry().top()
+
+    if direction == "left":
+        newLeft = root.geometry().left() - newWidth
+
+        if newLeft < screen.left():
+            newLeft = root.geometry().right()
+
+
+        return newLeft, newTop, newWidth, newHeight
+
+
+def removeChildren(layout):
+    while layout.count():
+        item = layout.takeAt(0)
+        widget = item.widget()
+        if widget:
+            widget.deleteLater()
+
+
+
+
+
+
+
+
+
+
+
+

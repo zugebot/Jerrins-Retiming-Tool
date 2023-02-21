@@ -28,14 +28,14 @@ class WindowMain(QMainWindow):
         self.palette: QPalette = palette
 
         self.latestUrl: str = ""
-        self.updateThread: Thread = None
-
 
         self.windowRetimer: WindowRetimer = WindowRetimer(self)
+        self.windowAddTemplate: WindowAddTemplate = None
         self.windowSettings: WindowSettings = None
         self.windowAddPage: WindowAddPage = None
 
         self.initUI()
+
         self.menuBar: QMenuBar = self.menuBar()
         self.initMenuBar()
 
@@ -62,25 +62,7 @@ class WindowMain(QMainWindow):
 
     def openWindowSettings(self):
         self.windowSettings = WindowSettings(self)
-
-        # position the new window to the left of the main window
-        new_window_width = 350
-        new_window_height = 400
-        screen = QApplication.desktop().screenGeometry()
-        new_window_left = self.geometry().left() - new_window_width
-        new_window_right = new_window_left + new_window_width
-        new_window_top = self.geometry().top()
-
-        # adjust the position of the new window if necessary to ensure it is fully visible on the screen
-        if new_window_left < screen.left():
-            new_window_right += (screen.left() - new_window_left)
-            new_window_left = screen.left()
-        elif new_window_right > screen.right():
-            new_window_left -= (new_window_right - screen.right())
-            new_window_right = screen.right()
-
-        self.windowSettings.setGeometry(new_window_left, new_window_top, new_window_width, new_window_height)
-
+        self.windowSettings.setGeometry(*placeOnSide(self, 350, 400, "left"))
         self.windowSettings.setWindowModality(Qt.ApplicationModal)
         self.windowSettings.show()
 
@@ -98,17 +80,15 @@ class WindowMain(QMainWindow):
         event.accept()
 
 
-    def keyPressEvent(self, event: QKeyEvent):
-        print(event.key())
-        super().keyPressEvent(event)
-
-
     def initUI(self):
         self.setTitle("Speedrun Retimer")
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        # self.setMaximumSize(470, 400)
+        self.setMinimumSize(280, 205)
+        self.setMaximumSize(450, 390)
         widget = QWidget()
         widget.setLayout(self.windowRetimer.layout)
+        widget.setMaximumHeight(self.windowRetimer.layout.sizeHint().height())
+        widget.setMinimumWidth(self.windowRetimer.rowForm.sizeHint().width())
         self.setCentralWidget(widget)
 
 
@@ -157,22 +137,9 @@ class WindowMain(QMainWindow):
                             "\n3. Added Templates!"
                             "\n  - Templates allow for saving and "
                             "\n    loading row presets."
-
                             )
         msg.setStandardButtons(QMessageBox.Ok)
         msg.exec_()
-
-
-    def openWebsite(self):
-        webbrowser.open(self.settings.url_links["website"])
-
-
-    def openModHub(self):
-        webbrowser.open(self.settings.url_links["modhub"])
-
-
-    def openGithub(self):
-        webbrowser.open(self.settings.url_links["retimer"])
 
 
     def viewTemplateFolder(self):
@@ -187,8 +154,8 @@ class WindowMain(QMainWindow):
         fileMenu: QMenu = self.menuBar.addMenu("File")
 
         addNewIconAction(self, fileMenu, self.iconify("document"), "&Open Folder", self.windowRetimer.viewDocumentFolder, "Ctrl+O")
-        addNewIconAction(self, fileMenu, self.iconify("X.png"), "Clear Splits", self.windowRetimer.resetSplits, "Ctrl+Z")
-        addNewIconAction(self, fileMenu, self.iconify("X.png"), "Clear Times", self.windowRetimer.resetTimes, "Ctrl+X")
+        addNewIconAction(self, fileMenu, self.iconify("skull.png"), "Clear Splits", self.windowRetimer.resetSplits, "Ctrl+Z")
+        addNewIconAction(self, fileMenu, self.iconify("skull.png"), "Clear Times", self.windowRetimer.resetTimes, "Ctrl+X")
         addNewIconAction(self, fileMenu, self.iconify("gear2.png"), "&Settings", self.openWindowSettings, "Ctrl+S")
 
 
@@ -201,13 +168,13 @@ class WindowMain(QMainWindow):
 
 
         websiteMenu: QMenu = self.menuBar.addMenu("Websites")
-        addNewIconAction(self, websiteMenu, self.iconify("trophy2.png"), "&Moderation Hub", self.openModHub, "Ctrl+M")
+        addNewIconAction(self, websiteMenu, self.iconify("trophy2.png"), "&Moderation Hub", partial(self.settings.openLink, "modhub"), "Ctrl+M")
         addNewIconAction(self, websiteMenu, self.iconify("globe2.png"), "&Edit Pages [TBD]", self.openWindowAddPage, "Ctrl+E")
 
 
         aboutMenu: QMenu = self.menuBar.addMenu("About")
-        addNewIconAction(self, aboutMenu, self.iconify("github2.png"), "&Github Page", self.openGithub, "Ctrl+G")
-        addNewAction(aboutMenu, "&Help", self.openWebsite, "Ctrl+H")
+        addNewIconAction(self, aboutMenu, self.iconify("github2.png"), "&Github Page", partial(self.settings.openLink, "github"), "Ctrl+G")
+        addNewAction(aboutMenu, "&Help", partial(self.settings.openLink, "website"), "Ctrl+H")
         addNewAction(aboutMenu, "C&redits", self.showCredits, "Ctrl+R")
 
 
@@ -224,17 +191,11 @@ class WindowMain(QMainWindow):
                 continue
             templates.append(file)
 
-
         menu = QMenu()
         for template in templates:
             filename = self.settings.dirJoiner(self.settings.templateFolder, template)
-
-
             data = read_json(filename)
             name = data.get("display-name", "N/A")
-
-
             addNewAction(menu, name, partial(self.windowRetimer.loadTemplate, filename))
             print("added", name)
-
         self.openRowTemplateAction.setMenu(menu)

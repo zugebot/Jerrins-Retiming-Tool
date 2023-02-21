@@ -1,4 +1,5 @@
 # Jerrin Shirks
+from typing import List
 
 # native imports
 from PyQt5.QtWidgets import *
@@ -27,8 +28,11 @@ class WindowRetimer:
 
         self.saveFileName: str = self.settings.documentFolder + "save.json"
         self.template: str = None
+
         self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignTop)
+
+
 
         # MAIN LAYOUT PARTS
         self.topBar = QVBoxLayout()
@@ -57,8 +61,6 @@ class WindowRetimer:
                                         timeEdit=False, change_func=self.updateFPS)
 
         self.buttonCopyMod = newButton("Copy Mod Message", None, self.copyModMessage)
-        # self.buttonClearSplits = newButton("Clear Splits", 85, self.resetSplits)
-        # self.buttonClearTimes = newButton("Clear Times", 85, self.resetTimes)
 
         self.labelModMessage = QLineEdit()
         self.labelModMessage.setStyleSheet("background-color: dark-grey;")
@@ -69,7 +71,6 @@ class WindowRetimer:
 
 
         widgetList = [self.bAddRow, self.LabelFPS, self.LineEditFPS, self.buttonCopyMod]
-                      # self.buttonClearSplits, self.buttonClearTimes]
         for widget in widgetList:
             self.firstBar.addWidget(widget)
 
@@ -79,14 +80,19 @@ class WindowRetimer:
 
         # 3. scroll area stuff
         self.rowForm = QFormLayout()
+        self.rowForm.setContentsMargins(0, 0, 0, 0)
+        self.rowForm.setSpacing(2)
         self.rowForm.setAlignment(Qt.AlignTop)
+
+        # self.layout.setMinimumWidth(self.rowForm.minimumSizeHint().width())
+        # self.layout.setSizeConstraint(self.rowForm.sizeHint().width())
 
         self.scrollWidget = QWidget()
         self.scrollWidget.setLayout(self.rowForm)
         self.scrollArea.setWidget(self.scrollWidget)
 
         self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setFixedHeight(295)
+        self.scrollArea.setMaximumHeight(295)
         self.scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
 
@@ -105,6 +111,7 @@ class WindowRetimer:
         while len(self.rows) > 1:
             self.delRow()
         self.rows[0].clear()
+        # self.rows[0].setStyle2()
         self.clearTitleTemplate()
 
 
@@ -114,11 +121,25 @@ class WindowRetimer:
 
 
     def addRow(self):
-        newRow = Row(self, len(self.rows))
+        if len(self.rows) == 0:
+            newRow = Row(self, len(self.rows), style=2)
+
+
+        else:
+            newRow = Row(self, len(self.rows), style=1)
+            # self.scrollArea.setFixedHeight(295)
         self.rows.append(newRow)
         self.rowForm.addRow(newRow.layout)
         self.updateRowCountLabel()
         self.clearTitleTemplate()
+
+        if len(self.rows) == 1:
+            self.rows[0].setStyle2()
+        else:
+            self.rows[0].setStyle1()
+
+        self.scrollArea.verticalScrollBar().setValue(self.scrollArea.verticalScrollBar().maximum())
+
         return newRow
 
 
@@ -131,6 +152,8 @@ class WindowRetimer:
         self.clearTitleTemplate()
         self.updateRowCountLabel()
 
+        if len(self.rows) == 1:
+            self.rows[0].setStyle2()
 
     def setRowCount(self, count: int = 1):
         while len(self.rows) < count:

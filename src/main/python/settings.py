@@ -1,4 +1,5 @@
 # Jerrin Shirks
+import webbrowser
 
 # native imports
 from PyQt5.QtWidgets import QStyleFactory
@@ -32,13 +33,12 @@ class Settings:
         self.url_links = {
             "website": 'https://jerrin.org',
             "modhub": 'https://www.speedrun.com/modhub',
-            "retimer": 'https://github.com/zugebot/Speedrun-Retimer',
+            "github": 'https://github.com/zugebot/Speedrun-Retimer',
             "mod-message-formatting": "https://github.com/zugebot/Speedrun-Retimer/blob/main/MOD_FORMAT.md"
         }
 
         self.default = {
             "fps": 30,
-            "include-separator-lines": True,
             "include-sub-loads": False,
             "include-paste-buttons": True,
             "show-hints": True,
@@ -51,8 +51,11 @@ class Settings:
         }
 
         self.windowStyleList = QStyleFactory.keys()
+        print(self.windowStyleList)
         if "Fusion" in self.windowStyleList:
-            self.default["window-style"] = self.windowStyleList.index("Fusion")
+            index = self.windowStyleList.index("Fusion")
+            self.default["window-style"] = index
+            self.data["window-style"] = index
 
         self.textColorList = ["Green", "Cyan"]
         self.textColorValues = [[78, 228, 78], "cyan"]
@@ -136,3 +139,7 @@ class Settings:
 
     def getBkgQColor(self):
         return self._toQColor("background-color")
+
+
+    def openLink(self, link):
+        webbrowser.open(link)
