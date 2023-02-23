@@ -4,11 +4,10 @@ import typing
 # native imports
 
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import QUrl
-from PyQt5.QtGui import QPalette, QColor, QIcon, QDesktopServices
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from bs4 import BeautifulSoup
 import requests
-import math
 import json
 import os
 
@@ -192,6 +191,37 @@ class ClickableLabel(QLabel):
 
     def mousePressEvent(self, event):
         QDesktopServices.openUrl(QUrl(self.link))
+
+
+
+class AnimatedIconAction(QAction):
+    def __init__(self, gif_file, text, parent=None):
+        super().__init__(text, parent)
+
+        self.movie = QMovie(gif_file)
+        self.movie.setCacheMode(QMovie.CacheAll)
+        self.movie.setSpeed(100)
+
+        # Get the current icon size from the style
+        style = QApplication.style()
+        icon_size = style.pixelMetric(QStyle.PM_SmallIconSize)
+        # Resize the animation to fit within the current icon size
+        pixmap = self.movie.currentPixmap()
+        scaled_pixmap = pixmap.scaled(icon_size, icon_size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+
+        self.setIcon(QIcon(scaled_pixmap))
+        self.playAnimation()
+
+    def playAnimation(self):
+        self.movie.start()
+
+    def addToMenu(self, menu, function=None, shortcut=None):
+        if callable(function):
+            self.triggered.connect(function)
+        menu.addAction(self)
+        if shortcut:
+            self.setShortcut(shortcut)
+
 
 
 def placeOnSide(root, newWidth, newHeight, direction):

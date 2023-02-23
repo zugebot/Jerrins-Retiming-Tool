@@ -12,15 +12,16 @@ from src.main.python.frameTime import FrameTime
 
 
 class Row:
-    def __init__(self, root, number, showIndex=True, style=1):
+    def __init__(self, root, number, style=0, showIndex=True, updateFunc=None):
 
         # variables
-        self.style = None
+        self.style = style
         self.root = root
         self.settings = root.settings
         self.number = number
         self.signType = 1
         self.showIndex = showIndex
+        self.updateFunc = updateFunc
 
         self.layout: QWidget = QWidget()
         # self.layout.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
@@ -71,35 +72,37 @@ class Row:
         self.widgets = [self.buttonSignType, self.buttonPasteStart, self.textTimeStart, self.buttonPasteEnd,
                         self.textTimeEnd, self.textTimeSub, self.textTimeFinal]
 
-        self.setStyle1()
+        self.rowLayout: QHBoxLayout = QHBoxLayout()
+
+        [self.setStyle1, self.setStyle2][style]()
+
 
 
     def setStyle1(self):
         removeChildren(self.container)
-        self.style = 1
 
         # spacers
-        rowLayout: QHBoxLayout = QHBoxLayout()
         spacer1 = QSpacerItem(5, 5, QSizePolicy.Minimum, QSizePolicy.Fixed)
         spacer2 = QSpacerItem(5, 5, QSizePolicy.Minimum, QSizePolicy.Fixed)
         spacer3 = QSpacerItem(5, 5, QSizePolicy.Minimum, QSizePolicy.Fixed)
         spacer4 = QSpacerItem(5, 5, QSizePolicy.Minimum, QSizePolicy.Fixed)
-        rowLayout.setContentsMargins(0, 0, 0, 0)
+        self.rowLayout.setContentsMargins(0, 0, 0, 0)
         self.container.addSpacerItem(spacer1)
-        self.container.addLayout(rowLayout)
+        self.container.addLayout(self.rowLayout)
         self.container.addSpacerItem(spacer2)
 
         # widgets to row
-        rowLayout.addSpacerItem(spacer3)
+        self.rowLayout.addSpacerItem(spacer3)
         for widget in self.widgets:
-            rowLayout.addWidget(widget)
-        rowLayout.addSpacerItem(spacer4)
+            self.rowLayout.addWidget(widget)
+        self.rowLayout.addSpacerItem(spacer4)
 
         # stretch factors
-        rowLayout.setStretchFactor(self.textTimeStart, 4)
-        rowLayout.setStretchFactor(self.textTimeEnd, 4)
-        rowLayout.setStretchFactor(self.textTimeFinal, 6)
+        self.rowLayout.setStretchFactor(self.textTimeStart, 4)
+        self.rowLayout.setStretchFactor(self.textTimeEnd, 4)
+        self.rowLayout.setStretchFactor(self.textTimeFinal, 6)
 
+        self.textTimeFinal.setMaximumWidth(150)
 
         self.resizeWidgets()
 
@@ -108,19 +111,35 @@ class Row:
         removeChildren(self.container)
         self.style = 2
 
-        grid = QGridLayout()
+        grid: QGridLayout = QGridLayout()
+        # grid.setRowStretch(0, 1)
+        grid.setSpacing(2)
+        grid.setContentsMargins(0, 0, 0, 0)
+        # grid.setSizeConstraint(QLayout.SetMaximumSize)
+
+        self.textTimeFinal.setMaximumWidth(200)
+
         self.container.addLayout(grid)
 
-        grid.addWidget(self.widgets[5], 0, 0)
-        grid.addWidget(self.widgets[1], 1, 0)
-        grid.addWidget(self.widgets[2], 1, 1)
-        grid.addWidget(self.widgets[3], 2, 0)
-        grid.addWidget(self.widgets[4], 3, 1)
-        grid.addWidget(self.widgets[6], 4, 0, 2, 1)
+        grid.addWidget(self.buttonPasteStart, 0, 0)
+        grid.addWidget(self.buttonPasteEnd,   1, 0)
+        grid.addWidget(self.textTimeStart,    0, 1)
+        grid.addWidget(self.textTimeEnd,      1, 1)
+        grid.addWidget(self.textTimeFinal,    2, 0, 1, 2)
+
 
 
     def resizeWidgets(self):
         self.layout.setMinimumSize(self.container.minimumSize())
+
+
+
+    def getMinimumWidth(self):
+        width = 0
+        for widget in self.widgets:
+            print(widget)
+            width += widget.minimumWidth()
+        return width
 
 
     def getSignValue(self):
@@ -202,7 +221,7 @@ class Row:
             self.textTimeStart.setText(clipboardText)
             return
         text = "Are you sure you want to paste?\nCurrent     : {}\nClipboard : {}"
-        newQuestionBox(self.root.root,
+        newQuestionBox(self.root,
                        message=text.format(self.textTimeStart.text(), clipboardText[:20]),
                        funcYes=self.textTimeStart.setText,
                        argsYes=clipboardText)
@@ -214,7 +233,7 @@ class Row:
             self.textTimeEnd.setText(clipboardText)
             return
         text = "Are you sure you want to paste?\nCurrent     : {}\nClipboard : {}"
-        newQuestionBox(self.root.root,
+        newQuestionBox(self.root,
                        message=text.format(self.textTimeEnd.text(), clipboardText[:20]),
                        funcYes=self.textTimeEnd.setText,
                        argsYes=clipboardText)
@@ -293,7 +312,9 @@ class Row:
 
         if self.textTimeStart.isEmpty() or self.textTimeEnd.isEmpty():
             self.textTimeFinal.clear()
-            self.root.updateModTotalTime()
+            if callable(self.updateFunc):
+                self.updateFunc()
+            # self.root.updateModTotalTime()
             return
 
         value = self.signType * (time2 - time1) + subLoad
@@ -304,4 +325,5 @@ class Row:
 
         self.textTimeFinal.setText(totalTime)
         if updateMod:
-            self.root.updateModTotalTime()
+            if callable(self.updateFunc):
+                self.updateFunc()

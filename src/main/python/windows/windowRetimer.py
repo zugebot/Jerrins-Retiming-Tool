@@ -15,7 +15,7 @@ from src.main.python.support import *
 from src.main.python.row import Row
 from src.main.python.frameTime import FrameTime
 from src.main.python.timeLineEdit import TimeLineEdit
-from src.main.python.windows.windowSettings import WindowSettings
+
 
 
 class WindowRetimer:
@@ -34,6 +34,7 @@ class WindowRetimer:
         # self.widget.setStyleSheet("background-color: red")
 
         self.layout = newQObject(QVBoxLayout, alignment=Qt.AlignTop)
+        self.layout.setContentsMargins(0, 0, 0, 0)
         self.widget.setLayout(self.layout)
 
 
@@ -136,7 +137,7 @@ class WindowRetimer:
 
 
     def addRow(self):
-        newRow = Row(self, len(self.rows))
+        newRow = Row(self, len(self.rows), updateFunc=self.updateModTotalTime)
         self.rows.append(newRow)
 
         self.rowBar.addWidget(newRow.layout)
@@ -216,10 +217,24 @@ class WindowRetimer:
             self.labelModMessage.setText(message)
 
 
+    def updateMinimumWidth(self):
+        if not self.rows:
+            return
+        width = self.rows[0].getMinimumWidth()
+
+        if self.scrollArea.verticalScrollBar().isVisible():
+            width += 10
+
+        self.widget.setMinimumWidth(width)
+        print(width)
+
+
     def updateSettings(self):
         # self.minimum_size()
         for row in self.rows:
             row.updateSettings()
+
+        self.updateMinimumWidth()
         # self.minimum_size()
         self.updateModTotalTime()
         # self.minimum_size()
@@ -349,6 +364,7 @@ class WindowRetimer:
 
         write_json(data, filename)
 
+        self.root.openRowTemplateAction.setVisible(True)
         self.root.populateTemplates()
 
 

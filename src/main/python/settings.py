@@ -64,12 +64,12 @@ class Settings:
             "Green": {
                 "text": [78, 228, 78],
                 "anti-text": [180, 0, 0],
-                "highlight": [0, 120, 0]
+                "highlight": [140, 228, 140]
             },
             "Cyan": {
                 "text": [0, 238, 238],
                 "anti-text": [180, 0, 0],
-                "highlight": [0, 139, 139]
+                "highlight": [0, 180, 180]
             }
         }
 

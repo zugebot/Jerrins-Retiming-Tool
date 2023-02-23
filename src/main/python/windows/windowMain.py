@@ -11,6 +11,7 @@ from src.main.python.windows.windowRetimer import WindowRetimer
 from src.main.python.windows.windowSettings import WindowSettings
 from src.main.python.windows.windowAddPage import WindowAddPage
 from src.main.python.windows.windowAddTemplate import WindowAddTemplate
+from src.main.python.windows.windowRetimerTiny import WindowRetimerTiny
 
 
 
@@ -32,8 +33,9 @@ class WindowMain(QMainWindow):
         self.windowAddTemplate: WindowAddTemplate = None
         self.windowSettings: WindowSettings = None
         self.windowAddPage: WindowAddPage = None
+        self.windowRetimerTiny: WindowRetimerTiny = None
 
-        # self.widget: QWidget = None
+
         self.initUI()
 
         self.menuBar: QMenuBar = self.menuBar()
@@ -43,6 +45,12 @@ class WindowMain(QMainWindow):
         self.findLatestVersion()
         self.windowRetimer.loadSaveFile()
 
+
+    def initUI(self):
+        self.setTitle()
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setMaximumSize(450, 363)
+        self.setCentralWidget(self.windowRetimer.widget)
 
 
     def applyPalette(self):
@@ -96,9 +104,19 @@ class WindowMain(QMainWindow):
         self.windowSettings.show()
 
 
+    def openWindowRetimerTiny(self):
+        self.windowRetimerTiny = WindowRetimerTiny(self)
+        self.hide()
+        self.windowRetimerTiny.show()
+
+
+
+
     def updateSettings(self):
         self.windowRetimer.updateSettings()
         self.app.setStyle(self.settings.getWindowStyle())
+
+
 
 
     def closeEvent(self, event):
@@ -107,20 +125,6 @@ class WindowMain(QMainWindow):
         if self.windowSettings is not None:
             self.windowSettings.close()
         event.accept()
-
-
-    def initUI(self):
-        self.setTitle()
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        # self.setMinimumSize(280, 205)
-        self.setMaximumWidth(450)
-        self.setFixedHeight(387)
-
-
-        self.setCentralWidget(self.windowRetimer.widget)
-
-
-        # self.setMinimumSize(self.windowRetimer.minimum_size())
 
 
     def setTitle(self, *args):
@@ -185,16 +189,28 @@ class WindowMain(QMainWindow):
         fileMenu: QMenu = self.menuBar.addMenu("File")
 
         addNewIconAction(self, fileMenu, self.iconify("document.png"), "&Open Folder", self.windowRetimer.viewDocumentFolder, "Ctrl+O")
-        addNewIconAction(self, fileMenu, self.iconify("copy.png"), "Copy Rows as Text", self.windowRetimer.copyRowsAsText, "Ctrl+D")
-        addNewIconAction(self, fileMenu, self.iconify("trash.png"), "Clear Rows", self.windowRetimer.resetSplits, "Ctrl+Z")
-        addNewIconAction(self, fileMenu, self.iconify("skull.png"), "Clear Times", self.windowRetimer.resetTimes, "Ctrl+X")
+        addNewIconAction(self, fileMenu, None, "Single Row Mode", self.openWindowRetimerTiny, "Ctrl+F")
         addNewIconAction(self, fileMenu, self.iconify("gear2.png"), "Settings", self.openWindowSettings, "Ctrl+A")
+
+
+        editMenu: QMenu = self.menuBar.addMenu("Edit")
+
+        addNewIconAction(self, editMenu, self.iconify("copy.png"), "Copy Rows as Text", self.windowRetimer.copyRowsAsText, "Ctrl+D")
+        addNewIconAction(self, editMenu, self.iconify("trash.png"), "Clear Rows", self.windowRetimer.resetSplits, "Ctrl+Z")
+        addNewIconAction(self, editMenu, self.iconify("skull.png"), "Clear Times", self.windowRetimer.resetTimes, "Ctrl+X")
+
+        # gif = self.settings.iconDir + "spinning.gif"
+        # self.actionClearRows = AnimatedIconAction(gif, "Clear Times")
+        # self.actionClearRows.addToMenu(editMenu, self.windowRetimer.resetTimes, "Ctrl+X")
 
 
         templateMenu: QMenu = self.menuBar.addMenu("Templates")
         # addNewIconAction(self, templateMenu, self.iconify("document"), "View &Template Folder", self.viewTemplateFolder, "Ctrl+T")
 
-        self.openRowTemplateAction = addNewIconAction(self, templateMenu, self.iconify("document"), "&Open Template", None)
+        self.openRowTemplateAction: QAction = addNewIconAction(self, templateMenu, self.iconify("document"), "&Open Template", None)
+        if len(self.getTemplates()) == 0:
+            self.openRowTemplateAction.setVisible(False)
+
         addNewIconAction(self, templateMenu, self.iconify("plus.png"), "&New Template", self.openWindowAddTemplate, "Ctrl+N")
         self.populateTemplates()
 
@@ -210,7 +226,8 @@ class WindowMain(QMainWindow):
         addNewAction(aboutMenu, "Credits", self.showCredits)
 
 
-    def populateTemplates(self):
+
+    def getTemplates(self):
         files = os.listdir(self.settings.templateFolder)
         templates = []
         for file in files:
@@ -220,6 +237,11 @@ class WindowMain(QMainWindow):
             if not file.endswith(".rt"):
                 continue
             templates.append(file)
+        return templates
+
+
+    def populateTemplates(self):
+        templates = self.getTemplates()
 
         menu = QMenu()
         for template in templates:
