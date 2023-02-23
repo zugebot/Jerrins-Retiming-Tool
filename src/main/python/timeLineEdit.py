@@ -8,10 +8,8 @@ import json
 import math
 
 # custom imports
-from support import *
-from settings import Settings
-from frameTime import FrameTime
-
+from src.main.python.support import *
+from src.main.python.frameTime import FrameTime
 
 
 
@@ -19,7 +17,7 @@ class TimeLineEdit(QLineEdit):
     def __init__(self,
                  row=None,
                  text: str = "",
-                 maxLength: int = 32,
+                 maxChar: int = 32,
                  readOnly: bool = False,
                  allow_decimal: bool = True,
                  allow_negative: bool = True,
@@ -35,10 +33,10 @@ class TimeLineEdit(QLineEdit):
         super().__init__()
 
         self.row = row
-        self.settings: Settings = row.settings
+        self.settings = row.settings
         self.lastText: str = text
         self.setText(text)
-        self.maxLength: int = maxLength
+        self.maxLength: int = maxChar
         self.allow_decimal: bool = allow_decimal
         self.allow_negative: bool = allow_negative
         self.changeFunc = change_func
@@ -82,11 +80,9 @@ class TimeLineEdit(QLineEdit):
         return self.settings.get("fps")
 
 
+    # need to fix this
     def updateColors(self):
-        try:
-            palette = self.row.root.root.palette
-        except:
-            palette = self.row.root.palette
+        palette = QPalette()
         palette.setColor(QPalette.HighlightedText, self.settings.getTextQColor())
         self.menu.setPalette(palette)
 
@@ -94,9 +90,6 @@ class TimeLineEdit(QLineEdit):
 
     def initMenu(self):
         self.updateColors()
-        # palette = QPalette()
-        # palette.setColor(QPalette.HighlightedText, self.settings.getTextQColor())
-        # self.menu.setPalette(palette)
         addNewAction(self.menu, "Format Time", self.handleFormatTime)
         addNewAction(self.menu, "Remove Time", self.clear)
         addNewAction(self.menu, "Paste Frames[WIP]", self.handlePasteFrames)
@@ -159,11 +152,8 @@ class TimeLineEdit(QLineEdit):
 
         # parses youtube debug info
         if self.timeEdit:
-            print("is timeEdit")
             frameTime = FrameTime(fps=self.getFPS())
-            print(text)
             if frameTime.isYTDebug(text):
-                print("hi")
                 frameTime.YTDebugInfo(text)
                 value = frameTime.getTotalTime(rounded=True)
                 return self.updateText(value)

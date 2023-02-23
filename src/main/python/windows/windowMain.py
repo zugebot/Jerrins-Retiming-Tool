@@ -1,31 +1,28 @@
 # Jerrin Shirks
 
 # native imports
-from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPalette, QColor, QIcon, QKeyEvent
-import requests
 import webbrowser
 from functools import partial
 
 # custom imports
-from support import *
-from row import Row
-from timeLineEdit import TimeLineEdit
-from windowRetimer import WindowRetimer
-from windowSettings import WindowSettings
-from windowAddPage import WindowAddPage
-from windowAddTemplate import WindowAddTemplate
+from src.main.python.support import *
+from src.main.python.windows.windowRetimer import WindowRetimer
+from src.main.python.windows.windowSettings import WindowSettings
+from src.main.python.windows.windowAddPage import WindowAddPage
+from src.main.python.windows.windowAddTemplate import WindowAddTemplate
 
 
 
 class WindowMain(QMainWindow):
-    def __init__(self, app, settings, palette, *args, **kwargs):
+    def __init__(self, app, settings, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         self.openRowTemplateAction = None
         self.app: QApplication = app
         self.settings = settings
-        self.palette: QPalette = palette
+        self.palette: QPalette = QPalette()
+        self.applyPalette()
 
         # self.setWindowOpacity(1)
 
@@ -36,7 +33,7 @@ class WindowMain(QMainWindow):
         self.windowSettings: WindowSettings = None
         self.windowAddPage: WindowAddPage = None
 
-        self.widget: QWidget = None
+        # self.widget: QWidget = None
         self.initUI()
 
         self.menuBar: QMenuBar = self.menuBar()
@@ -45,6 +42,35 @@ class WindowMain(QMainWindow):
         # startup funcs
         self.findLatestVersion()
         self.windowRetimer.loadSaveFile()
+
+
+
+    def applyPalette(self):
+        grey1 = self.settings.getQColor("grey1")
+        grey3 = self.settings.getQColor("grey3")
+        self.palette.setColor(QPalette.Window, grey1)
+        self.palette.setColor(QPalette.AlternateBase, grey1)
+        self.palette.setColor(QPalette.Button, grey1)
+        self.palette.setColor(QPalette.Base, grey3)
+        self.palette.setColor(QPalette.HighlightedText, Qt.black)
+        self.palette.setColor(QPalette.ToolTipBase, Qt.black)
+        self.palette.setColor(QPalette.WindowText, Qt.white)
+        self.palette.setColor(QPalette.ToolTipText, Qt.white)
+        self.palette.setColor(QPalette.Text, Qt.white)
+        self.palette.setColor(QPalette.ButtonText, Qt.white)
+
+        text = self.settings.getTextQColor()
+        highlight = self.settings.getHighlightQColor()
+
+        self.palette.setColor(QPalette.BrightText, text)
+        self.palette.setColor(QPalette.Link, text)
+        self.palette.setColor(QPalette.Highlight, highlight)
+
+        self.app.setPalette(self.palette)
+        self.app.setStyle(self.settings.getWindowStyle())
+
+
+
 
 
     def iconify(self, filename):
@@ -84,25 +110,21 @@ class WindowMain(QMainWindow):
 
 
     def initUI(self):
-        self.setTitle("Speedrun Retimer")
+        self.setTitle()
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         # self.setMinimumSize(280, 205)
-        self.setMaximumSize(450, 390)
-        self.widget = QWidget()
-        self.widget.setLayout(self.windowRetimer.layout)
-        self.setCentralWidget(self.widget)
-
-        # Set the minimum size of the WindowMain object
-        self.setMinimumSize(self.windowRetimer.minimum_size())
+        self.setMaximumWidth(450)
+        self.setFixedHeight(387)
 
 
-    def update_minimum_size(self):
-        # Update the minimum size of the WindowMain object based on the minimum size of the WindowRetimer object
-        self.setMinimumSize(self.windowRetimer.minimum_size())
+        self.setCentralWidget(self.windowRetimer.widget)
+
+
+        # self.setMinimumSize(self.windowRetimer.minimum_size())
 
 
     def setTitle(self, *args):
-        title = "Speedrun Retimer"
+        title = "Jerrin's Retiming Tool"
         for arg in args:
             if arg is None:
                 continue
@@ -162,10 +184,11 @@ class WindowMain(QMainWindow):
 
         fileMenu: QMenu = self.menuBar.addMenu("File")
 
-        addNewIconAction(self, fileMenu, self.iconify("document"), "&Open Folder", self.windowRetimer.viewDocumentFolder, "Ctrl+O")
-        addNewIconAction(self, fileMenu, self.iconify("skull.png"), "Clear Splits", self.windowRetimer.resetSplits, "Ctrl+Z")
+        addNewIconAction(self, fileMenu, self.iconify("document.png"), "&Open Folder", self.windowRetimer.viewDocumentFolder, "Ctrl+O")
+        addNewIconAction(self, fileMenu, self.iconify("copy.png"), "Copy Rows as Text", self.windowRetimer.copyRowsAsText, "Ctrl+D")
+        addNewIconAction(self, fileMenu, self.iconify("trash.png"), "Clear Rows", self.windowRetimer.resetSplits, "Ctrl+Z")
         addNewIconAction(self, fileMenu, self.iconify("skull.png"), "Clear Times", self.windowRetimer.resetTimes, "Ctrl+X")
-        addNewIconAction(self, fileMenu, self.iconify("gear2.png"), "&Settings", self.openWindowSettings, "Ctrl+A")
+        addNewIconAction(self, fileMenu, self.iconify("gear2.png"), "Settings", self.openWindowSettings, "Ctrl+A")
 
 
         templateMenu: QMenu = self.menuBar.addMenu("Templates")
@@ -177,19 +200,18 @@ class WindowMain(QMainWindow):
 
 
         websiteMenu: QMenu = self.menuBar.addMenu("Websites")
-        addNewIconAction(self, websiteMenu, self.iconify("trophy2.png"), "&Moderation Hub", partial(self.settings.openLink, "modhub"), "Ctrl+Q")
-        addNewIconAction(self, websiteMenu, self.iconify("globe2.png"), "&Edit Pages [TBD]", self.openWindowAddPage, "Ctrl+E")
+        addNewIconAction(self, websiteMenu, self.iconify("trophy2.png"), "Moderation Hub", partial(self.settings.openLink, "modhub"), "Ctrl+Q")
+        addNewIconAction(self, websiteMenu, self.iconify("globe2.png"), "Edit Pages [TBD]", self.openWindowAddPage, "Ctrl+E")
 
 
         aboutMenu: QMenu = self.menuBar.addMenu("About")
-        addNewIconAction(self, aboutMenu, self.iconify("github2.png"), "&Github Page", partial(self.settings.openLink, "github"), "Ctrl+R")
-        addNewAction(aboutMenu, "&Help", partial(self.settings.openLink, "website"), "Ctrl+H")
-        addNewAction(aboutMenu, "C&redits", self.showCredits, "Ctrl+R")
+        addNewIconAction(self, aboutMenu, self.iconify("github2.png"), "Github Page", partial(self.settings.openLink, "github"))
+        addNewAction(aboutMenu, "How to Use [WIP]", partial(self.settings.openLink, "website"))
+        addNewAction(aboutMenu, "Credits", self.showCredits)
 
 
     def populateTemplates(self):
         files = os.listdir(self.settings.templateFolder)
-        print("templates:", files)
         templates = []
         for file in files:
             filename = self.settings.dirJoiner(self.settings.templateFolder, file)
@@ -205,5 +227,4 @@ class WindowMain(QMainWindow):
             data = read_json(filename)
             name = data.get("display-name", "N/A")
             addNewAction(menu, name, partial(self.windowRetimer.loadTemplate, filename))
-            print("added", name)
         self.openRowTemplateAction.setMenu(menu)

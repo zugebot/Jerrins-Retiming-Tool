@@ -4,11 +4,11 @@ import webbrowser
 # native imports
 from PyQt5.QtWidgets import QStyleFactory
 import platform
-
-# custom imports
-from support import *
 import subprocess
 import os
+
+# custom imports
+from src.main.python.support import *
 
 
 
@@ -39,27 +39,39 @@ class Settings:
 
         self.default = {
             "fps": 30,
-            "include-sub-loads": False,
-            "include-paste-buttons": True,
+            "show-sub-loads": False,
+            "show-paste-buttons": True,
             "show-hints": True,
             "decimal-accuracy": 3,
             "mod-message": "Mod Note: Retimed to {TT}.",
-            "window-style": 0,
+
+            "window-styles": QStyleFactory.keys(),
+            "window-style": None,
             "text-color": 0,
-            "text-color-negative": "red",
-            "background-color": "dark-grey"
+
+            "grey1": [53, 53, 53],
+            "grey2": [40, 40, 40],
+            "grey3": [25, 25, 25],
+            "black": [0, 0, 0]
         }
 
-        self.windowStyleList = QStyleFactory.keys()
-        print(self.windowStyleList)
-        if "Fusion" in self.windowStyleList:
-            index = self.windowStyleList.index("Fusion")
-            self.default["window-style"] = index
-            self.data["window-style"] = index
+        self.getWindowStyle()
 
-        self.textColorList = ["Green", "Cyan"]
-        self.textColorValues = [[78, 228, 78], "cyan"]
+        # self.textColorList = ["Green", "Cyan"]
+        # self.textColorValues = [[78, 228, 78], "cyan"]
 
+        self.textThemes = {
+            "Green": {
+                "text": [78, 228, 78],
+                "anti-text": [180, 0, 0],
+                "highlight": [0, 120, 0]
+            },
+            "Cyan": {
+                "text": [0, 238, 238],
+                "anti-text": [180, 0, 0],
+                "highlight": [0, 139, 139]
+            }
+        }
 
     def get(self, key):
         return self.data.get(key, self.default.get(key, None))
@@ -70,6 +82,44 @@ class Settings:
         for key in self.default:
             data[key] = self.get(key)
         return data
+
+
+    def getColorRGB(self, key):
+        return "rgb({},{},{})".format(*(i for i in self.get(key)))
+
+    def getQColor(self, key):
+        return QColor(*self.get(key))
+
+
+    def getTextTheme(self):
+        return self.textThemes[[i for i in self.textThemes][self.get("text-color")]]
+
+
+    def getTextColorRGB(self):
+        theme = self.getTextTheme()
+        return "rgb({},{},{})".format(*(i for i in theme["text"]))
+
+    def getTextQColor(self):
+        theme = self.getTextTheme()
+        return QColor(*theme["text"])
+
+    def getHighlightRGB(self):
+        theme = self.getTextTheme()
+        return "rgb({},{},{})".format(*(i for i in theme["highlight"]))
+
+    def getHighlightQColor(self):
+        theme = self.getTextTheme()
+        return QColor(*theme["highlight"])
+
+    def getAntiTextColorRGB(self):
+        theme = self.getTextTheme()
+        return "rgb({},{},{})".format(*(i for i in theme["anti-text"]))
+
+    def getAntiTextQColor(self):
+        theme = self.getTextTheme()
+        return QColor(*theme["anti-text"])
+
+
 
 
     def set(self, key, value):
@@ -109,7 +159,18 @@ class Settings:
 
 
     def getWindowStyle(self):
-        return self.windowStyleList[self.get("window-style")]
+
+        # defaults
+        if self.get("window-style") is None:
+            if "Fusion" in self.get("window-styles"):
+                index = self.get("window-styles").index("Fusion")
+                self.default["window-style"] = index
+                self.data["window-style"] = index
+            else:
+                self.default["window-style"] = 0
+                self.data["window-style"] = 0
+
+        return self.get("window-styles")[self.get("window-style")]
 
 
     def openFileDialog(self, filename):
@@ -130,15 +191,10 @@ class Settings:
             color = QColor(color[0], color[1], color[2])
         return color
 
+    """
     def getTextQColor(self):
         return self._toQColor(self.textColorValues[self.get("text-color")])
-
-
-    def getNegTextQColor(self):
-        return self._toQColor(self.get("text-color-negative"))
-
-    def getBkgQColor(self):
-        return self._toQColor("background-color")
+    """
 
 
     def openLink(self, link):

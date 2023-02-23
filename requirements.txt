@@ -1,4 +1,5 @@
-requests
+requests~=2.27.1
 fbs
 fbs-tutorial
-beautifulsoup4
+beautifulsoup4~=4.11.2
+PyQt5~=5.9.2

@@ -1,0 +1,162 @@
+{
+  "en": {
+    "ensure_paste": "Are you sure you want to paste?\nCurrent     : {}\nClipboard : {}",
+    "mod-note": "Mod Note: Retimed to {TT}.",
+    "color-green": "Green",
+    "color-cyan": "Cyan",
+
+    "#": "textLineEditMenu",
+    "format_time": "Format Time",
+    "remove_time": "Remove Time",
+    "paste_frames": "Paste Frames [WIP]",
+
+    "##": "WindowAddPage",
+    "add_page": "Add Page",
+
+    "###": "WindowAddTemplate",
+    "add_template": "Add Template",
+    "template_name": "Template Name:",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+
+    "####": "WindowMain",
+    "window_title": "Speedrun Retimer",
+    "menu_update": "Update",
+    "menu_update_message": "Download {}!",
+    "menu_open_folder": "",
+    "menu_copy_rows_as_text": "",
+    "menu_clear_rows": "Clear Rows",
+    "menu_clear_times": "Clear Times",
+    "menu_settings": "Settings",
+    "menu_template": "Templates",
+    "menu_template_open": "",
+    "menu_template_new": "",
+    "menu_websites": "Moderation Hub",
+    "menu_edit_pages": "Edit Pages [TBD]",
+    "menu_about": "About",
+    "menu_page_github": "Github Page",
+    "menu_help": "Help",
+    "menu_credits": "Credits",
+
+    "#####": "WindowRetimer",
+    "add_row": "Add Row",
+    "del_row": "Del Row",
+    "copy_mod_message": "Copy Mod Message",
+    "mod_message_hint": "Mod Message...",
+    "row_count": "Rows: {}",
+    "reset_rows_title": "Reset Rows",
+    "reset_rows_warn": "Are you sure to remove all rows and times?\"",
+    "reset_times": "",
+
+    "######": "WindowSettings",
+    "title_settings": "Settings [{}]",
+    "title_window_options": "Window Options",
+    "title_window_style": "Window Style",
+    "theme_color": "Theme Color\n[Needs Restart]",
+    "show_paste_buttons": "Show Paste Buttons",
+    "show_subload_textboxes": "Show Sub-load Textboxes",
+    "show_hints": "Show Text Hints",
+    "mod_message_options": "Mod Message Options",
+    "formatting_guide": "Formatting Guide",
+    "current_formatted_example": "Current Formatted Example",
+    "restore_defaults": "Restore Defaults",
+    "save": "Save",
+    "apply": "Apply"
+  },
+
+  "df": {
+    "ensure_paste": "",
+    "mod-note": "",
+    "color-green": "",
+    "color-cyan": "",
+
+    "#": "textLineEditMenu",
+    "format_time": "",
+    "remove_time": "",
+    "paste_frames": "Paste Frames [WIP]",
+
+    "##": "WindowAddPage",
+    "add_page": "",
+
+    "###": "WindowAddTemplate",
+    "add_template": "",
+    "template_name": "",
+    "cancel": "",
+    "confirm": "",
+
+    "####": "WindowMain",
+    "window_title": "",
+    "menu_update": "",
+    "menu_update_message": "{}",
+    "menu_open_folder": "",
+    "menu_copy_rows_as_text": "",
+    "menu_clear_rows": "",
+    "menu_clear_times": "",
+    "menu_settings": "",
+    "menu_template": "",
+    "menu_template_open": "",
+    "menu_template_new": "",
+    "menu_websites": "",
+    "menu_edit_pages": "",
+    "menu_about": "",
+    "menu_page_github": "",
+    "menu_help": "",
+    "menu_credits": "",
+
+    "#####": "WindowRetimer",
+    "add_row": "",
+    "del_row": "",
+    "copy_mod_message": "",
+    "mod_message_hint": "",
+    "row_count": "{}",
+    "reset_rows_title": "",
+    "reset_rows_warn": "",
+    "reset_times": "",
+
+    "######": "WindowSettings",
+    "title_settings": "",
+    "title_window_options": "",
+    "title_window_style": "",
+    "theme_color": "",
+    "show_paste_buttons": "",
+    "show_subload_textboxes": "",
+    "show_hints": "",
+    "mod_message_options": "",
+    "formatting_guide": "",
+    "current_formatted_example": "",
+    "restore_defaults": "",
+    "save": "",
+    "apply": ""
+
+
+  }
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

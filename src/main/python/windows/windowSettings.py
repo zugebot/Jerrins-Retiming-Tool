@@ -7,8 +7,8 @@ from PyQt5.QtGui import QPalette, QColor, QIcon
 from functools import partial
 
 # custom imports
-from support import *
-from frameTime import FrameTime
+from src.main.python.support import *
+from src.main.python.frameTime import FrameTime
 
 
 
@@ -37,8 +37,7 @@ class WindowSettings(QWidget):
         # window option section (use self.windowSettingsGrid)
         self.windowOptionsGroup = QGroupBox("Window Options")
         self.windowOptionsGroup.setFlat(True)
-        self.windowSettingsGrid = QGridLayout()
-        self.windowSettingsGrid.setAlignment(Qt.AlignTop)
+        self.windowSettingsGrid = newQObject(QGridLayout, alignment=Qt.AlignTop)
         self.windowOptionsGroup.setLayout(self.windowSettingsGrid)
         self.layout.addWidget(self.windowOptionsGroup)
 
@@ -48,21 +47,21 @@ class WindowSettings(QWidget):
         # window options
         self.styleLabel = QLabel("Window Style")
         self.styleCombo = QComboBox()
-        self.styleCombo.addItems(self.settings.windowStyleList)
+        self.styleCombo.addItems(self.settings.get("window-styles"))
         self.styleCombo.setCurrentIndex(self.data["window-style"])
         self.styleCombo.currentIndexChanged.connect(self.changeWindowStyle)
 
         self.textColorLabel = QLabel("Theme Color\n[Needs Restart]")
         self.textColorCombo = QComboBox()
-        self.textColorCombo.addItems(self.settings.textColorList)
+        self.textColorCombo.addItems([i for i in self.settings.textThemes]) # self.settings.textColorList)
         self.textColorCombo.setCurrentIndex(self.data["text-color"])
         self.textColorCombo.currentIndexChanged.connect(partial(self.comboBoxChanged, "text-color"))
 
         self.checkPaste = QCheckBox("Show Paste Buttons")
-        self.checkPaste.stateChanged.connect(partial(self.checkboxStateChanged, "include-paste-buttons"))
+        self.checkPaste.stateChanged.connect(partial(self.checkboxStateChanged, "show-paste-buttons"))
 
         self.checkSubload = QCheckBox("Show Sub-load Textboxes")
-        self.checkSubload.stateChanged.connect(partial(self.checkboxStateChanged, "include-sub-loads"))
+        self.checkSubload.stateChanged.connect(partial(self.checkboxStateChanged, "show-sub-loads"))
 
         self.checkShowHints = QCheckBox("Show Text Hints")
         self.checkShowHints.stateChanged.connect(partial(self.checkboxStateChanged, "show-hints"))
@@ -84,8 +83,7 @@ class WindowSettings(QWidget):
         # mod option section (use self.modSettingsGrid)
         self.modOptionsGroup = QGroupBox("Mod Message Options")
         self.modOptionsGroup.setFlat(True)
-        self.modSettingsGrid = QGridLayout()
-        self.modSettingsGrid.setAlignment(Qt.AlignTop)
+        self.modSettingsGrid = newQObject(QGridLayout, alignment=Qt.AlignTop)
         self.modOptionsGroup.setLayout(self.modSettingsGrid)
         self.layout.addWidget(self.modOptionsGroup)
 
@@ -96,15 +94,17 @@ class WindowSettings(QWidget):
         self.modMessageEdit = QTextEdit()
         self.modMessageEdit.textChanged.connect(self.modMessageChanged)
         self.modMessageEdit.verticalScrollBar().valueChanged.connect(self.modMessageEditScrolled)
+        self.modMessageEdit.setStyleSheet("border-radius: 2px;")
         self.modMessageView = QTextEdit()
         self.modMessageView.setReadOnly(True)
+        self.modMessageView.setStyleSheet("border-radius: 2px;")
 
         self.exampleFrameTime = FrameTime()
         self.exampleFrameTime.setMilliseconds(30100)
         self.exampleFrameTime.setStartAndEnd(5917, 36017)
 
-        self.exampleLabel = QLabel("Current Formatted Example")
-        self.exampleLabel.setStyleSheet(bold_text)
+        self.exampleLabel = newQObject(QLabel, text="Current Formatted Example", styleSheet=bold_text)
+
 
         self.modSettingsGrid.addWidget(self.learnClickLabel, 0, 1, 1, 1)
         self.modSettingsGrid.addWidget(self.modMessageEdit, 1, 1, 1, 1)
@@ -117,12 +117,10 @@ class WindowSettings(QWidget):
         # bottom stuff
         self.bottomLayout = QHBoxLayout()
 
-        self.leftSide = QHBoxLayout()
-        self.leftSide.setAlignment(Qt.AlignLeft)
+        self.leftSide = newQObject(QHBoxLayout, alignment=Qt.AlignLeft)
         self.bottomLayout.addLayout(self.leftSide)
 
-        self.rightSide = QHBoxLayout()
-        self.rightSide.setAlignment(Qt.AlignRight)
+        self.rightSide = newQObject(QHBoxLayout, alignment=Qt.AlignRight)
         self.bottomLayout.addLayout(self.rightSide)
 
 
@@ -146,8 +144,8 @@ class WindowSettings(QWidget):
     def reloadSettingsScreen(self):
         self.textColorCombo.setCurrentIndex(self.data["text-color"])
         self.styleCombo.setCurrentIndex(self.data["window-style"])
-        self.checkPaste.setChecked(self.data["include-paste-buttons"])
-        self.checkSubload.setChecked(self.data["include-sub-loads"])
+        self.checkPaste.setChecked(self.data["show-paste-buttons"])
+        self.checkSubload.setChecked(self.data["show-sub-loads"])
         self.checkShowHints.setChecked(self.data["show-hints"])
         self.modMessageEdit.setText(self.data["mod-message"])
 

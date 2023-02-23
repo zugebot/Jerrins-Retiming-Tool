@@ -7,8 +7,8 @@ from PyQt5.QtGui import QPalette, QColor, QIcon
 from functools import partial
 
 # custom imports
-from support import *
-from frameTime import FrameTime
+from src.main.python.support import *
+from src.main.python.frameTime import FrameTime
 
 
 

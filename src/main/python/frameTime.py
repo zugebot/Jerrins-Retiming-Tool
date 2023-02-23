@@ -2,7 +2,7 @@
 
 # native imports
 import json
-from json import JSONDecodeError
+
 
 
 class FrameTime:
@@ -42,11 +42,16 @@ class FrameTime:
 
 
     def roundValueMilliseconds(self, value):
+        is_negative = value < 0
+
+        value = abs(value)
         upper = value - value % 1000
         milli = value / 1000 + (1 / self.fps) / 100
         milli = milli - (milli % 1) % (1 / self.fps)
         milli = int(round(milli % 1, 3) * 1000)
         value = upper + milli
+        if is_negative:
+            value = -value
         return value
 
 
@@ -95,14 +100,17 @@ class FrameTime:
 
     @staticmethod
     def convertToSeconds(time_str: str, dec_accuracy: int = 3) -> int:
+        # print("converting", time_str)
         for a, b in [["–", "-"], [" ", ":"]]:
             time_str = time_str.replace(a, b)
-        # time_str = time_str.replace("–", "-")
-        # time_str = time_str.replace(" ", ":")
+
         if time_str == "-":
             time_str = "-0"
 
+        # get if it's negative
         is_negative = "-" in time_str
+        time_str = time_str.replace("-", "")
+
 
         if "." not in time_str:
             time_str += ".0"
@@ -122,8 +130,9 @@ class FrameTime:
                     milli = int(decimal_offset * float("0." + i.ljust(dec_accuracy, "0")))
                     time_values.append(milli)
 
-
+        time_before = time_values.copy()
         time_values = [-i if is_negative else i for i in time_values]
+
         time_values = list(reversed(time_values))
 
         total_milli = 0
@@ -134,6 +143,10 @@ class FrameTime:
 
             total_milli += value * times_to_milli[index]
         # :sunglasses: we did it fam!!! :heart-emoji:
+
+        # if time_before != [0, 0]:
+            # print("time_str/before/after/milli", time_str, time_before, time_values, total_milli)
+
         return total_milli
 
 
@@ -142,7 +155,7 @@ class FrameTime:
         self.setMilliseconds(milliseconds)
 
 
-    def getSign(self, value: int = None) -> bool:
+    def isNegative(self, value: int = None) -> bool:
         if value is not None:
             return value < 0
         return self.milliseconds < 0
@@ -264,11 +277,10 @@ class FrameTime:
     def getTotalTime(self, rounded=True) -> str:
         time_str: str = ""
 
-
+        is_negative = self.backup_milliseconds < 0
 
         hours, minutes, seconds, milli = self.getTimeSections()
-        if self.getSign():
-            time_str += "–"
+
         if hours:
             time_str += self.getHoursStr() + ":"
             time_str += self.getPaddedMinutesStr() + ":"
@@ -279,6 +291,9 @@ class FrameTime:
             time_str += "." + self.getMilliseconds3Str()
         else:
             time_str += "." + str(abs(self.backup_milliseconds) % 1000).rjust(3, "0")
+
+        if is_negative:
+            time_str = "–" + time_str
 
         # self.milliseconds = backup_milliseconds
         return time_str
@@ -306,6 +321,10 @@ class FrameTime:
             "TT": self.getTotalTime(),
 
             "FPS": self.fps,
+
+            "FS": 0,
+            "FE": 0,
+            "FT": 0
         }
 
         for key in items:
