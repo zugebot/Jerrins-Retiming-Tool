@@ -8,7 +8,7 @@ import subprocess
 import os
 
 # custom imports
-from src.main.python.support import *
+from support import *
 
 
 
@@ -27,7 +27,7 @@ class Settings:
         self.version = version
         self.latest_ver = version
 
-        self.iconDir: str = self.data.get("icon-dir", "../../../icons/")
+        self.iconDir: str = self.data.get("icon-dir", "../resources/")
         self.latestVersionLink: str = "https://jerrin.org/downloads/retimer/latest.json"
 
         self.url_links = {

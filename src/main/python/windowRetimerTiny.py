@@ -6,8 +6,8 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QKeySequence
 
 # custom imports
-from src.main.python.support import *
-from src.main.python.row import Row
+from support import *
+from row import Row
 
 
 

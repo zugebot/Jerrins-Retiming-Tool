@@ -1,4 +1,4 @@
-# ![Icon](https://media.discordapp.net/attachments/902396118976061461/1042515141658419200/32.png) Jerrin's Speedrun Retimer
+# ![Icon](https://media.discordapp.net/attachments/902396118976061461/1042515141658419200/32.png) Jerrin's Retiming Tool
 A program made to help speedrun moderators retime runs that have multiple splits.
 
 ![yes](https://cdn.discordapp.com/attachments/682750811008139305/1079190212346916935/image.png)
@@ -31,7 +31,10 @@ When
 **Auto Updates!**  
 Whenever I publish a new version, an update button will appear on the menu bar.
 
-
+**Compact Mode**  
+![real](https://media.discordapp.net/attachments/682750811008139305/1079197542451003392/image.png)  
+This can be used when you don't need the full window.  
+Closing it will re-open the main window, or by clicking its open keybind again.
 
 ## Settings
 **Window Style**  
@@ -55,6 +58,7 @@ The program has a template feature, allowing you to save and open saved template
 
 ## Custom Mod Messages
 You can customize mod messages with this feature.
+Check out MOD_FORMAT.md for more information.
 
 ## Menu Bar
 

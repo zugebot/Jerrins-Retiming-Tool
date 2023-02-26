@@ -8,8 +8,8 @@ import json
 import math
 
 # custom imports
-from src.main.python.support import *
-from src.main.python.frameTime import FrameTime
+from support import *
+from frameTime import FrameTime
 
 
 

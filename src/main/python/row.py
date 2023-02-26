@@ -6,9 +6,9 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPalette, QColor, QIcon
 
 # custom imports
-from src.main.python.support import *
-from src.main.python.timeLineEdit import TimeLineEdit
-from src.main.python.frameTime import FrameTime
+from support import *
+from timeLineEdit import TimeLineEdit
+from frameTime import FrameTime
 
 
 class Row:

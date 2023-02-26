@@ -11,10 +11,10 @@ import json
 import os
 
 # custom imports
-from src.main.python.support import *
-from src.main.python.row import Row
-from src.main.python.frameTime import FrameTime
-from src.main.python.timeLineEdit import TimeLineEdit
+from support import *
+from row import Row
+from frameTime import FrameTime
+from timeLineEdit import TimeLineEdit
 
 
 

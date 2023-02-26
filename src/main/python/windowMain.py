@@ -6,22 +6,23 @@ import webbrowser
 from functools import partial
 
 # custom imports
-from src.main.python.support import *
-from src.main.python.windows.windowRetimer import WindowRetimer
-from src.main.python.windows.windowSettings import WindowSettings
-from src.main.python.windows.windowAddPage import WindowAddPage
-from src.main.python.windows.windowAddTemplate import WindowAddTemplate
-from src.main.python.windows.windowRetimerTiny import WindowRetimerTiny
+from support import *
+from windowRetimer import WindowRetimer
+from windowSettings import WindowSettings
+from windowAddPage import WindowAddPage
+from windowAddTemplate import WindowAddTemplate
+from windowRetimerTiny import WindowRetimerTiny
 
 
 
 class WindowMain(QMainWindow):
-    def __init__(self, app, settings, *args, **kwargs):
+    def __init__(self, app, settings, resources, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.openRowTemplateAction = None
         self.app: QApplication = app
         self.settings = settings
+        self.resources = resources
 
         self.app.setPalette(self.settings.palette)
         self.app.setStyle(self.settings.getWindowStyle())
@@ -52,10 +53,6 @@ class WindowMain(QMainWindow):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         # self.setMaximumSize(450, 363)
         self.setCentralWidget(self.windowRetimer.widget)
-
-
-    def iconify(self, filename):
-        return self.settings.iconDir + filename
 
 
     def openWindowAddPage(self):
@@ -161,16 +158,16 @@ class WindowMain(QMainWindow):
 
         fileMenu: QMenu = self.menuBar.addMenu("File")
 
-        addNewIconAction(self, fileMenu, self.iconify("document.png"), "&Open Folder", self.windowRetimer.viewDocumentFolder, "Ctrl+O")
-        addNewIconAction(self, fileMenu, self.iconify("eraser.png"), "Single Row Mode", self.openWindowRetimerTiny, "Ctrl+F")
-        addNewIconAction(self, fileMenu, self.iconify("gear2.png"), "Settings", self.openWindowSettings, "Ctrl+A")
+        addNewIconAction(self, fileMenu, self.resources["document"], "&Open Folder", self.windowRetimer.viewDocumentFolder, "Ctrl+O")
+        addNewIconAction(self, fileMenu, self.resources["eraser"], "Single Row Mode", self.openWindowRetimerTiny, "Ctrl+F")
+        addNewIconAction(self, fileMenu, self.resources["gear2"], "Settings", self.openWindowSettings, "Ctrl+A")
 
 
         editMenu: QMenu = self.menuBar.addMenu("Edit")
 
-        addNewIconAction(self, editMenu, self.iconify("copy.png"), "Copy Rows as Text", self.windowRetimer.copyRowsAsText, "Ctrl+D")
-        addNewIconAction(self, editMenu, self.iconify("trash.png"), "Clear Rows", self.windowRetimer.resetSplits, "Ctrl+Z")
-        addNewIconAction(self, editMenu, self.iconify("skull.png"), "Clear Times", self.windowRetimer.resetTimes, "Ctrl+X")
+        addNewIconAction(self, editMenu, self.resources["copy"], "Copy Rows as Text", self.windowRetimer.copyRowsAsText, "Ctrl+D")
+        addNewIconAction(self, editMenu, self.resources["trash"], "Clear Rows", self.windowRetimer.resetSplits, "Ctrl+Z")
+        addNewIconAction(self, editMenu, self.resources["skull"], "Clear Times", self.windowRetimer.resetTimes, "Ctrl+X")
 
         # gif = self.settings.iconDir + "spinning.gif"
         # self.actionClearRows = AnimatedIconAction(gif, "Clear Times")
@@ -180,21 +177,21 @@ class WindowMain(QMainWindow):
         templateMenu: QMenu = self.menuBar.addMenu("Templates")
         # addNewIconAction(self, templateMenu, self.iconify("document"), "View &Template Folder", self.viewTemplateFolder, "Ctrl+T")
 
-        self.openRowTemplateAction: QAction = addNewIconAction(self, templateMenu, self.iconify("document"), "&Open Template", None)
+        self.openRowTemplateAction: QAction = addNewIconAction(self, templateMenu, self.resources["document"], "&Open Template", None)
         if len(self.getTemplates()) == 0:
             self.openRowTemplateAction.setVisible(False)
 
-        addNewIconAction(self, templateMenu, self.iconify("plus.png"), "&New Template", self.openWindowAddTemplate, "Ctrl+N")
+        addNewIconAction(self, templateMenu, self.resources["plus"], "&New Template", self.openWindowAddTemplate, "Ctrl+N")
         self.populateTemplates()
 
 
         websiteMenu: QMenu = self.menuBar.addMenu("Websites")
-        addNewIconAction(self, websiteMenu, self.iconify("trophy2.png"), "Moderation Hub", partial(self.settings.openLink, "modhub"), "Ctrl+Q")
-        addNewIconAction(self, websiteMenu, self.iconify("globe2.png"), "Edit Pages [TBD]", self.openWindowAddPage, "Ctrl+E")
+        addNewIconAction(self, websiteMenu, self.resources["trophy2"], "Moderation Hub", partial(self.settings.openLink, "modhub"), "Ctrl+Q")
+        addNewIconAction(self, websiteMenu, self.resources["globe2"], "Edit Pages [TBD]", self.openWindowAddPage, "Ctrl+E")
 
 
         aboutMenu: QMenu = self.menuBar.addMenu("About")
-        addNewIconAction(self, aboutMenu, self.iconify("github2.png"), "Github Page", partial(self.settings.openLink, "github"))
+        addNewIconAction(self, aboutMenu, self.resources["github2"], "Github Page", partial(self.settings.openLink, "github"))
         addNewAction(aboutMenu, "How to Use [WIP]", partial(self.settings.openLink, "website"))
         addNewAction(aboutMenu, "Credits", self.showCredits)
 

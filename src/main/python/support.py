@@ -6,7 +6,7 @@ import typing
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from bs4 import BeautifulSoup
+# from bs4 import BeautifulSoup
 import requests
 import json
 import os
@@ -62,7 +62,7 @@ def read_json(filename):
         data = json.loads(file.read())
     return data
 
-
+"""
 def getFaviconFromUrl(url):
     response = requests.get(url)
     html = response.text
@@ -81,7 +81,7 @@ def getGameNameFromUrl(url):
     if og_title:
         return og_title['content'].replace(" - speedrun.com", "")
     return None
-
+"""
 
 def addNewAction(menu, text_str="", func=None, shortcut=None):
     action: QAction = menu.addAction(text_str)
