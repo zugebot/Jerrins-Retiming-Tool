@@ -184,12 +184,12 @@ class WindowSettings(QWidget):
         self.closeSettings()
 
 
-    def closeSettings(self):
-        self.close()
-
-
     def applySettings(self):
         for key in self.data:
             self.settings.set(key, self.data[key])
         self.settings.save()
         self.parent.updateSettings()
+
+
+    def closeSettings(self):
+        self.close()

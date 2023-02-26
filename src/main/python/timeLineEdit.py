@@ -80,21 +80,39 @@ class TimeLineEdit(QLineEdit):
         return self.settings.get("fps")
 
 
-    # need to fix this
-    def updateColors(self):
-        palette = QPalette()
-        palette.setColor(QPalette.HighlightedText, self.settings.getTextQColor())
-        self.menu.setPalette(palette)
-
-
 
     def initMenu(self):
-        self.updateColors()
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.showContextMenu)
+
         addNewAction(self.menu, "Format Time", self.handleFormatTime)
         addNewAction(self.menu, "Remove Time", self.clear)
-        addNewAction(self.menu, "Paste Frames[WIP]", self.handlePasteFrames)
+        addNewAction(self.menu, "Copy as Mod Message", self.copyModMessage)
+        # addNewAction(self.menu, "Paste Frames[WIP]", self.handlePasteFrames)
 
 
+    def showContextMenu(self, point):
+        style_sheet = f"""
+            QMenu {{
+                background-color: {self.settings.get("grey2")};
+                color: white;
+            }}
+            QMenu::item:selected {{
+                background-color: {self.settings.getHighlightRGB()};
+                color: black;
+            }}
+        """
+        self.menu.setStyleSheet(style_sheet)
+        self.menu.exec_(self.mapToGlobal(point))
+
+
+    def copyModMessage(self):
+        cb = QApplication.clipboard()
+        cb.clear(mode=cb.Clipboard)
+        time = FrameTime(time_str=self.text())
+        message = time.createModMessage(self.settings.get("mod-message"))
+        message = message.replace("\\n", "\n")
+        cb.setText(message, mode=cb.Clipboard)
 
 
     def handlePasteFrames(self):

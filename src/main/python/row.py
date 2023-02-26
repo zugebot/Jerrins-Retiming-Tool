@@ -137,7 +137,7 @@ class Row:
     def getMinimumWidth(self):
         width = 0
         for widget in self.widgets:
-            print(widget)
+            # print(widget)
             width += widget.minimumWidth()
         return width
 

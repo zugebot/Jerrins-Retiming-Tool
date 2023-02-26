@@ -22,8 +22,9 @@ class WindowMain(QMainWindow):
         self.openRowTemplateAction = None
         self.app: QApplication = app
         self.settings = settings
-        self.palette: QPalette = QPalette()
-        self.applyPalette()
+
+        self.app.setPalette(self.settings.palette)
+        self.app.setStyle(self.settings.getWindowStyle())
 
         # self.setWindowOpacity(1)
 
@@ -49,36 +50,8 @@ class WindowMain(QMainWindow):
     def initUI(self):
         self.setTitle()
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setMaximumSize(450, 363)
+        # self.setMaximumSize(450, 363)
         self.setCentralWidget(self.windowRetimer.widget)
-
-
-    def applyPalette(self):
-        grey1 = self.settings.getQColor("grey1")
-        grey3 = self.settings.getQColor("grey3")
-        self.palette.setColor(QPalette.Window, grey1)
-        self.palette.setColor(QPalette.AlternateBase, grey1)
-        self.palette.setColor(QPalette.Button, grey1)
-        self.palette.setColor(QPalette.Base, grey3)
-        self.palette.setColor(QPalette.HighlightedText, Qt.black)
-        self.palette.setColor(QPalette.ToolTipBase, Qt.black)
-        self.palette.setColor(QPalette.WindowText, Qt.white)
-        self.palette.setColor(QPalette.ToolTipText, Qt.white)
-        self.palette.setColor(QPalette.Text, Qt.white)
-        self.palette.setColor(QPalette.ButtonText, Qt.white)
-
-        text = self.settings.getTextQColor()
-        highlight = self.settings.getHighlightQColor()
-
-        self.palette.setColor(QPalette.BrightText, text)
-        self.palette.setColor(QPalette.Link, text)
-        self.palette.setColor(QPalette.Highlight, highlight)
-
-        self.app.setPalette(self.palette)
-        self.app.setStyle(self.settings.getWindowStyle())
-
-
-
 
 
     def iconify(self, filename):
@@ -189,7 +162,7 @@ class WindowMain(QMainWindow):
         fileMenu: QMenu = self.menuBar.addMenu("File")
 
         addNewIconAction(self, fileMenu, self.iconify("document.png"), "&Open Folder", self.windowRetimer.viewDocumentFolder, "Ctrl+O")
-        addNewIconAction(self, fileMenu, None, "Single Row Mode", self.openWindowRetimerTiny, "Ctrl+F")
+        addNewIconAction(self, fileMenu, self.iconify("eraser.png"), "Single Row Mode", self.openWindowRetimerTiny, "Ctrl+F")
         addNewIconAction(self, fileMenu, self.iconify("gear2.png"), "Settings", self.openWindowSettings, "Ctrl+A")
 
 
