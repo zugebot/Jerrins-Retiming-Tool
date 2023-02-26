@@ -39,7 +39,7 @@ class WindowRetimerTiny(QWidget):
         self.setStyleSheet(f"background-color: {grey2};")
 
         # make items
-        self.copyButton = newQObject(QPushButton, text="Copy Mod Message", func=None, maxWidth=150)
+        self.copyButton = newQObject(QPushButton, text="Copy Mod Message", func=self.copyModMessage, maxWidth=150)
         self.row = Row(root, 0, style=1)
 
         # add items
@@ -51,6 +51,13 @@ class WindowRetimerTiny(QWidget):
         self.setLayout(self.layout)
 
 
+
+    def copyModMessage(self):
+        cb = QApplication.clipboard()
+        cb.clear(mode=cb.Clipboard)
+        message = self.row.textTimeFinal.time.createModMessage(self.settings.get("mod-message"))
+        message = message.replace("\\n", "\n")
+        cb.setText(message, mode=cb.Clipboard)
 
 
     def closeEvent(self, event):

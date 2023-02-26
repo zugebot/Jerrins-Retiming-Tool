@@ -6,14 +6,19 @@ import json
 
 
 class FrameTime:
-    def __init__(self, time: int = 0, fps: int = 30):
+    def __init__(self, time: int = 0, fps: int = 30, time_str: str = None):
         self.time: int = time
         self.fps: int = fps
         self.backup_milliseconds: int = time
         self.milliseconds: int = time
 
-        self.timeStart: int = float("inf")
+        self.timeStart: int = None
         self.timeEnd: int = 0
+
+        if time_str is not None:
+            time_int = self.convertToSeconds(time_str)
+            self.backup_milliseconds = time_int
+            self.milliseconds = time_int
 
 
     def setStartAndEnd(self, timeStart: int, timeEnd: int):
@@ -194,6 +199,7 @@ class FrameTime:
 
 
     def getTotalSeconds(self) -> int:
+        # print(self.getTotalMilliseconds())
         seconds = int(self.getTotalMilliseconds() / 1000)
         return seconds
 
@@ -275,6 +281,9 @@ class FrameTime:
 
 
     def getTotalTime(self, rounded=True) -> str:
+        # if self.backup_milliseconds is None:
+        #     return None
+
         time_str: str = ""
 
         is_negative = self.backup_milliseconds < 0
@@ -315,8 +324,8 @@ class FrameTime:
             "PM": self.getPaddedMinutesStr(),
             "PS": self.getPaddedSecondsStr(),
 
-            "TS": FrameTime(self.timeStart).getTotalTime(),
-            "TE": FrameTime(self.timeEnd).getTotalTime(),
+            "TS": "N/A" if self.timeStart is None else FrameTime(self.timeStart).getTotalTime(),
+            "TE": "N/A" if self.timeStart is None else FrameTime(self.timeEnd).getTotalTime(),
 
             "TT": self.getTotalTime(),
 

@@ -73,6 +73,9 @@ class Settings:
             }
         }
 
+        self.palette: QPalette = self.makePalette()
+
+
     def get(self, key):
         return self.data.get(key, self.default.get(key, None))
 
@@ -199,3 +202,31 @@ class Settings:
 
     def openLink(self, link):
         webbrowser.open(self.url_links[link])
+
+    def makePalette(self):
+        palette: QPalette = QPalette()
+
+        grey1 = self.getQColor("grey1")
+        grey3 = self.getQColor("grey3")
+        text = self.getTextQColor()
+        highlight = self.getHighlightQColor()
+
+        palette.setColor(QPalette.Window, grey1)
+        palette.setColor(QPalette.AlternateBase, grey1)
+        palette.setColor(QPalette.Button, grey1)
+        palette.setColor(QPalette.Base, grey3)
+        palette.setColor(QPalette.HighlightedText, Qt.black)
+        palette.setColor(QPalette.ToolTipBase, Qt.black)
+        palette.setColor(QPalette.WindowText, Qt.white)
+        palette.setColor(QPalette.ToolTipText, Qt.white)
+        palette.setColor(QPalette.Text, Qt.white)
+        palette.setColor(QPalette.ButtonText, Qt.white)
+
+        palette.setColor(QPalette.BrightText, text)
+        palette.setColor(QPalette.Link, text)
+        palette.setColor(QPalette.Highlight, highlight)
+
+        # palette.setColor(QPalette.Background, highlight)
+        # palette.setColor(QPalette.Foreground, Qt.white)
+
+        return palette

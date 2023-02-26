@@ -31,11 +31,14 @@ class WindowRetimer:
 
         self.widget: QWidget = QWidget()
 
-        # self.widget.setStyleSheet("background-color: red")
-
         self.layout = newQObject(QVBoxLayout, alignment=Qt.AlignTop)
         self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setSpacing(0)
+        self.layout.setSizeConstraint(QLayout.SetMaximumSize)
         self.widget.setLayout(self.layout)
+
+        self.widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
+        self.widget.setMaximumHeight(self.layout.sizeHint().height())
 
 
         # MAIN LAYOUT PARTS
@@ -96,23 +99,26 @@ class WindowRetimer:
         self.topGrid.setRowStretch(0, 0)
         self.topGrid.setRowStretch(1, 0)
 
-
-
-
         # 3. scroll area stuff
         # self.rowForm = newQObject(QFormLayout, margins=(0, 0, 0, 0), spacing=2, alignment=Qt.AlignTop,
         #                           )# sizeConstraint=QLayout.SetMinimumSize)
 
-        self.rowBar: QVBoxLayout = newQObject(QVBoxLayout, margins=(0, 0, 0, 0), spacing=2, alignment=Qt.AlignTop)
+        self.rowBar: QVBoxLayout = newQObject(QVBoxLayout, margins=(0, 0, 0, 0), alignment=Qt.AlignTop)
+        self.rowBar.setSpacing(0)
+        self.rowBar.setSizeConstraint(QLayout.SetMaximumSize)
 
         self.scrollArea: QScrollArea = newQObject(QScrollArea)
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setWidget(QWidget())
-        self.scrollArea.setMaximumHeight(272)
+
+        self.scrollArea.setFixedHeight(260)
         self.scrollArea.widget().setLayout(self.rowBar)
         self.scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
         self.layout.addWidget(self.scrollArea)
+
+        self.updateSettings()
+        self.updateMinimumWidth()
 
 
     def clearTitleTemplate(self):
@@ -163,10 +169,28 @@ class WindowRetimer:
 
 
     def update_rowbar_height(self):
-        if self.rowBar.count() >= 9:
-            self.rowBar.setSizeConstraint(QVBoxLayout.SetMinimumSize)
-        elif self.rowBar.count() <= 8:
-            self.rowBar.setSizeConstraint(QVBoxLayout.SetMinimumSize)
+        self.root.setMaximumHeight(self.widget.maximumHeight())
+
+        self.widget.setMaximumHeight(self.layout.sizeHint().height())
+
+        pass
+        # set the maximum height of the layout to the height required by its contents
+
+
+        # size_hint = self.rowBar.sizeHint()
+
+        # set the maximum height of the widget to the height required by the layout
+        # self.scrollArea.setMaximumHeight(size_hint.height())
+        # self.widget.setMaximumHeight(size_hint.height())
+
+        # fix main window
+        # size_hint = self.widget.sizeHint()
+        # self.widget.setMaximumHeight(size_hint.height())
+
+        # if self.rowBar.count() >= 9:
+        #     self.rowBar.setSizeConstraint(QVBoxLayout.SetMinimumSize)
+        # elif self.rowBar.count() <= 8:
+        #    self.rowBar.setSizeConstraint(QVBoxLayout.SetMinimumSize)
 
 
 
@@ -201,11 +225,15 @@ class WindowRetimer:
             subLoadTime += row.textTimeSub.getValue()
 
             time1 = row.textTimeStart.getValue()
-            if time1 < self.totalTime.timeStart:
+            if self.totalTime.timeStart is None:
+                self.totalTime.timeStart = time1
+            elif time1 < self.totalTime.timeStart:
                 self.totalTime.timeStart = time1
 
             time2 = row.textTimeEnd.getValue()
-            if time2 > self.totalTime.timeEnd:
+            if self.totalTime.timeEnd is None:
+                self.totalTime.timeEnd = time2
+            elif time2 > self.totalTime.timeEnd:
                 self.totalTime.timeEnd = time2
 
         if allRowsEmpty or finalTime == 0:
@@ -213,7 +241,6 @@ class WindowRetimer:
         else:
             self.totalTime.setMilliseconds(finalTime)
             message = self.totalTime.createModMessage(self.settings.get("mod-message"))
-            # message = message.replace("\n", "\\n")
             self.labelModMessage.setText(message)
 
 
@@ -221,23 +248,18 @@ class WindowRetimer:
         if not self.rows:
             return
         width = self.rows[0].getMinimumWidth()
-
-        if self.scrollArea.verticalScrollBar().isVisible():
+        if len(self.rows) > 8:
             width += 10
-
         self.widget.setMinimumWidth(width)
-        print(width)
+        # print(width)
 
 
     def updateSettings(self):
-        # self.minimum_size()
         for row in self.rows:
             row.updateSettings()
 
         self.updateMinimumWidth()
-        # self.minimum_size()
         self.updateModTotalTime()
-        # self.minimum_size()
 
 
     def updateFPS(self):

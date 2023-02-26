@@ -473,8 +473,8 @@ def makeTable(data,
 
     # Step 3.3, stretches a line horizontally from vert_line arg
     for vert_index in vert_line:
-        print(data[vert_index])
-        print(len(data), print(len(data[0])), len(max_length_list))
+        # print(data[vert_index])
+        # print(len(data), print(len(data[0])), len(max_length_list))
         data[vert_index] = [(i * max_length_list[n])[:max_length_list[n]] for n, i in enumerate(data[vert_index])]
 
 
