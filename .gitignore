@@ -2,3 +2,5 @@ src/main/python.save.json
 target/
 .idea/
 appIcons/*
+venv
+__pycache__
