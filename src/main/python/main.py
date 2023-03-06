@@ -35,12 +35,9 @@ class AppContext(ApplicationContext):
         }
 
 
-
-
-
     def run(self):
-        app = QApplication([])
-        settings = Settings("1.04.0")
+        app: QApplication = QApplication([])
+        settings = Settings()
         resources = self.ready_resources
 
         windowMain = WindowMain(app, settings, resources)

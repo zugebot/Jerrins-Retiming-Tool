@@ -1,4 +1,5 @@
-src/main/python.save.json
-target/
-.idea/
-appIcons/*
+builds
+target
+.idea
+src/build.settings/secret.json
+fbs_pro-1.1.9.tar.gz

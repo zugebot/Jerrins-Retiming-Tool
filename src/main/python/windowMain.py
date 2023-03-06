@@ -27,6 +27,7 @@ class WindowMain(QMainWindow):
         self.app.setPalette(self.settings.palette)
         self.app.setStyle(self.settings.getWindowStyle())
 
+
         # self.setWindowOpacity(1)
 
         self.latestUrl: str = ""
@@ -51,8 +52,18 @@ class WindowMain(QMainWindow):
     def initUI(self):
         self.setTitle()
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        # self.setMaximumSize(450, 363)
+        self.setMaximumSize(450, 360)
         self.setCentralWidget(self.windowRetimer.widget)
+
+        shortcut = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_Q), self)
+        shortcut.activated.connect(self.close)
+
+
+    def initFont(self):
+        font = QFont()
+        font.setPointSize(8)
+        app.setFont(font)
+
 
 
     def openWindowAddPage(self):
@@ -108,12 +119,14 @@ class WindowMain(QMainWindow):
 
     def findLatestVersion(self):
         try:
-            latest = requests.get(self.settings.latestVersionLink).text.split("\n")
-            self.settings.latestDownloadUrl = f"{self.settings.latestVersionLink}{latest[1]}".replace(" ", "%20")
-            print(self.settings.version, latest[0])
-            if self.settings.version < latest[0]:
+            latest = requests.get(self.settings.websiteLatest).text
+            self.settings.latest_ver = latest
+
+
+
+            if self.settings.version < latest:
                 update_bar = self.menuBar.addMenu("Update")
-                addNewAction(update_bar, f"Download {self.settings.latest_ver}!", self.downloadUpdate)
+                addNewAction(update_bar, f"Download {latest} !", self.downloadUpdate)
         except Exception as e:
             print(e)
             "do nothing lol, no internet"
@@ -124,15 +137,18 @@ class WindowMain(QMainWindow):
 
 
     def downloadUpdate(self):
-        webbrowser.open(self.latestUrl)
+        webbrowser.open(self.settings.websiteDir)
 
 
     def showCredits(self):
         msg = QMessageBox(self)
         msg.setWindowTitle("Credits")
-        msg.setText("UI + Coding   : jerrinth3glitch#6280      \n"
-                    "Icon Design    : Alexis.#3047\n"
-                    "Early Support : Aiivan#8227")
+        msg.setText("UI + Coding   : jerrinth3glitch#6280      "
+                    "\nIcon Design    : Alexis.#3047"
+                    "\nEarly Support : Aiivan#8227"
+                    "\n"
+                    f"\nReleased {self.settings.date}")
+
         msg.setInformativeText(rf"<b>Version {self.settings.version}<\b>")
         msg.setDetailedText(
                             "1. Added Settings!"
@@ -158,16 +174,17 @@ class WindowMain(QMainWindow):
 
         fileMenu: QMenu = self.menuBar.addMenu("File")
 
-        addNewIconAction(self, fileMenu, self.resources["document"], "&Open Folder", self.windowRetimer.viewDocumentFolder, "Ctrl+O")
-        addNewIconAction(self, fileMenu, self.resources["eraser"], "Single Row Mode", self.openWindowRetimerTiny, "Ctrl+F")
-        addNewIconAction(self, fileMenu, self.resources["gear2"], "Settings", self.openWindowSettings, "Ctrl+A")
+        addNewIconAction(self, "Ctrl+O", fileMenu, self.resources["document"], "&Open Folder", self.windowRetimer.viewDocumentFolder)
+        addNewIconAction(self, "Ctrl+F", fileMenu, self.resources["eraser"], "Single Row Mode", self.openWindowRetimerTiny)
+        addNewIconAction(self, "Ctrl+S", fileMenu, self.resources["gear2"], "Settings", self.openWindowSettings)
 
 
         editMenu: QMenu = self.menuBar.addMenu("Edit")
 
-        addNewIconAction(self, editMenu, self.resources["copy"], "Copy Rows as Text", self.windowRetimer.copyRowsAsText, "Ctrl+D")
-        addNewIconAction(self, editMenu, self.resources["trash"], "Clear Rows", self.windowRetimer.resetSplits, "Ctrl+Z")
-        addNewIconAction(self, editMenu, self.resources["skull"], "Clear Times", self.windowRetimer.resetTimes, "Ctrl+X")
+        addNewIconAction(self, "Ctrl+D", editMenu, self.resources["copy"], "Copy Rows as Text", self.windowRetimer.copyRowsAsText)
+        addNewIconAction(self, "Ctrl+A", editMenu, self.resources["copy"], "Copy Mod Message", self.windowRetimer.copyModMessage)
+        addNewIconAction(self, "Ctrl+Z", editMenu, self.resources["trash"], "Clear Rows", self.windowRetimer.resetSplits)
+        addNewIconAction(self, "Ctrl+X", editMenu, self.resources["skull"], "Clear Times", self.windowRetimer.resetTimes)
 
         # gif = self.settings.iconDir + "spinning.gif"
         # self.actionClearRows = AnimatedIconAction(gif, "Clear Times")
@@ -177,22 +194,22 @@ class WindowMain(QMainWindow):
         templateMenu: QMenu = self.menuBar.addMenu("Templates")
         # addNewIconAction(self, templateMenu, self.iconify("document"), "View &Template Folder", self.viewTemplateFolder, "Ctrl+T")
 
-        self.openRowTemplateAction: QAction = addNewIconAction(self, templateMenu, self.resources["document"], "&Open Template", None)
+        self.openRowTemplateAction: QAction = addNewIconAction(self, None, templateMenu, self.resources["document"], "&Open Template")
         if len(self.getTemplates()) == 0:
             self.openRowTemplateAction.setVisible(False)
 
-        addNewIconAction(self, templateMenu, self.resources["plus"], "&New Template", self.openWindowAddTemplate, "Ctrl+N")
+        addNewIconAction(self, "Ctrl+N", templateMenu, self.resources["plus"], "&New Template", self.openWindowAddTemplate)
         self.populateTemplates()
 
 
         websiteMenu: QMenu = self.menuBar.addMenu("Websites")
-        addNewIconAction(self, websiteMenu, self.resources["trophy2"], "Moderation Hub", partial(self.settings.openLink, "modhub"), "Ctrl+Q")
-        addNewIconAction(self, websiteMenu, self.resources["globe2"], "Edit Pages [TBD]", self.openWindowAddPage, "Ctrl+E")
+        addNewIconAction(self, "Ctrl+W", websiteMenu, self.resources["trophy2"], "Moderation Hub", partial(self.settings.openLink, "modhub"))
+        # addNewIconAction(self, websiteMenu, self.resources["globe2"], "Edit Pages [TBD]", self.openWindowAddPage, "Ctrl+E")
 
 
         aboutMenu: QMenu = self.menuBar.addMenu("About")
-        addNewIconAction(self, aboutMenu, self.resources["github2"], "Github Page", partial(self.settings.openLink, "github"))
-        addNewAction(aboutMenu, "How to Use [WIP]", partial(self.settings.openLink, "website"))
+        addNewIconAction(self, None, aboutMenu, self.resources["github2"], "Github Page", partial(self.settings.openLink, "github"))
+        # addNewAction(aboutMenu, "How to Use [WIP]", partial(self.settings.openLink, "website"))
         addNewAction(aboutMenu, "Credits", self.showCredits)
 
 
