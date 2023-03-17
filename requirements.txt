@@ -1,0 +1,3 @@
+fbs==1.1.9
+PyQt5==5.12.3
+requests
