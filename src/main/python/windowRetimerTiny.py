@@ -6,7 +6,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QKeySequence
 
 # custom imports
-from support import *
+from _support import *
 from row import Row
 
 
@@ -21,9 +21,10 @@ class WindowRetimerTiny(QWidget):
         self.setWindowTitle(" ")
         self.setMaximumSize(150, 80)
 
-        shortcut = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_F), self)
-        shortcut.activated.connect(self.close)
-
+        shortcut1 = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_Q), self)
+        shortcut1.activated.connect(self.close)
+        shortcut2 = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_F), self)
+        shortcut2.activated.connect(self.close)
 
         self.layout = QVBoxLayout()
         self.layout.setSpacing(2)

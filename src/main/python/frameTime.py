@@ -48,17 +48,16 @@ class FrameTime:
 
     def roundValueMilliseconds(self, value):
         is_negative = value < 0
-
-        value = abs(value)
+        value = abs(value) + 1
         upper = value - value % 1000
-        milli = value / 1000 + (1 / self.fps) / 100
-        milli = milli - (milli % 1) % (1 / self.fps)
+        frame_length = (1 / self.fps)
+        milli = value / 1000 + frame_length / 100
+        milli = milli - (milli % 1) % frame_length
         milli = int(round(milli % 1, 3) * 1000)
         value = upper + milli
         if is_negative:
             value = -value
         return value
-
 
 
     def setSeconds(self, seconds: int or float = 0) -> None:
@@ -98,9 +97,19 @@ class FrameTime:
 
 
         valid_1 = all(x in allowed_chars for x in time_str)
-        valid_2 = time_str.count(".") < 2
+
+        periods = time_str.count(".")
+        valid_2 = periods < 2
+
+        valid_4 = True
+        if periods:
+            index = time_str.index(".")
+            if index + 4 < len(time_str):
+                valid_4 = False
+
+
         valid_3 = time_str.count("-") < 2
-        return all([valid_1, valid_2, valid_3])
+        return all([valid_1, valid_2, valid_3, valid_4])
 
 
     @staticmethod

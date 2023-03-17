@@ -6,7 +6,7 @@ import webbrowser
 from functools import partial
 
 # custom imports
-from support import *
+from _support import *
 from windowRetimer import WindowRetimer
 from windowSettings import WindowSettings
 from windowAddPage import WindowAddPage
@@ -181,10 +181,10 @@ class WindowMain(QMainWindow):
 
         editMenu: QMenu = self.menuBar.addMenu("Edit")
 
-        addNewIconAction(self, "Ctrl+D", editMenu, self.resources["copy"], "Copy Rows as Text", self.windowRetimer.copyRowsAsText)
-        addNewIconAction(self, "Ctrl+A", editMenu, self.resources["copy"], "Copy Mod Message", self.windowRetimer.copyModMessage)
-        addNewIconAction(self, "Ctrl+Z", editMenu, self.resources["trash"], "Clear Rows", self.windowRetimer.resetSplits)
-        addNewIconAction(self, "Ctrl+X", editMenu, self.resources["skull"], "Clear Times", self.windowRetimer.resetTimes)
+        addNewIconAction(self, "Shift+Ctrl+D", editMenu, self.resources["copy"], "Copy Rows as Text", self.windowRetimer.copyRowsAsText)
+        addNewIconAction(self, "Shift+Ctrl+A", editMenu, self.resources["copy"], "Copy Mod Message", self.windowRetimer.copyModMessage)
+        addNewIconAction(self, "Shift+Ctrl+Z", editMenu, self.resources["trash"], "Clear Rows", self.windowRetimer.resetSplits)
+        addNewIconAction(self, "Shift+Ctrl+X", editMenu, self.resources["skull"], "Clear Times", self.windowRetimer.resetTimes)
 
         # gif = self.settings.iconDir + "spinning.gif"
         # self.actionClearRows = AnimatedIconAction(gif, "Clear Times")

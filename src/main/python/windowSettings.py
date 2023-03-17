@@ -7,7 +7,7 @@ from PyQt5.QtGui import QPalette, QColor, QIcon
 from functools import partial
 
 # custom imports
-from support import *
+from _support import *
 from frameTime import FrameTime
 
 
@@ -19,7 +19,10 @@ class WindowSettings(QWidget):
         self.settings = parent.settings
 
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowTitle(f"Settings [{self.settings.version}]")
+        self.setWindowTitle("Settings")
+
+        shortcut = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_S), self)
+        shortcut.activated.connect(self.close)
 
         self.setFixedWidth(350)
 

@@ -11,10 +11,11 @@ import json
 import os
 
 # custom imports
-from support import *
+from _support import *
 from row import Row
 from frameTime import FrameTime
 from timeLineEdit import TimeLineEdit
+from customTextEdit import CustomTextEdit
 
 
 
@@ -24,6 +25,8 @@ class WindowRetimer:
         self.settings = root.settings
 
         self.rows: List[Row] = []
+
+
 
         self.saveFileName: str = self.settings.documentFolder + "save.json"
         self.template: str = None
@@ -78,8 +81,11 @@ class WindowRetimer:
 
         self.buttonCopyMod = newQObject(QPushButton, text="Copy Mod Message", func=self.copyModMessage)
 
-        self.labelModMessage = newQObject(QTextEdit, height=48, temp="Mod Message...", readOnly=True,
-                                          styleSheet=background)
+        _ = CustomTextEdit(self.settings)
+        self.labelModMessage: CustomTextEdit = editQObject(_, height=48, temp="Mod Message...",
+                                          readOnly=True, styleSheet=background)
+        # self.labelModMessage = newQObject(QTextEdit, height=48, temp="Mod Message...", readOnly=True,
+        #                                   styleSheet=background)
         self.labelModMessage.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self.rowCountLabel = newQObject(QLabel, width=60, height=21, text=f"Rows: {len(self.rows)}", styleSheet=background)
@@ -166,6 +172,12 @@ class WindowRetimer:
         self.updateRowCountLabel()
 
         self.update_rowbar_height()
+
+
+
+    def flashRows(self):
+        for row in self.rows:
+            row.flash()
 
 
     def update_rowbar_height(self):
@@ -278,6 +290,7 @@ class WindowRetimer:
         message = self.labelModMessage.toPlainText()
         message = message.replace("\\n", "\n")
         cb.setText(message, mode=cb.Clipboard)
+        self.labelModMessage.flash()
 
 
     def resetSplits(self):
@@ -332,6 +345,7 @@ class WindowRetimer:
 
 
     def copyRowsAsText(self):
+        self.flashRows()
         clipboard = QApplication.clipboard()
 
         rows_used = 0
