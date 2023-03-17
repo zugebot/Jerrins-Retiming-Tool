@@ -9,7 +9,7 @@ import os
 
 # custom imports
 from support import *
-import release
+import _release as release
 
 
 class Settings:

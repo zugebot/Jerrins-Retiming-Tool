@@ -1,6 +1,5 @@
-builds
-target
-.idea
+builds/
+target/
+.idea/
 src/build.settings/secret.json
 fbs_pro-1.1.9.tar.gz
-push
