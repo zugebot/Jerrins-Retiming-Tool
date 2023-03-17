@@ -6,7 +6,7 @@ import webbrowser
 from functools import partial
 
 # custom imports
-from _support import *
+from support import *
 from windowRetimer import WindowRetimer
 from windowSettings import WindowSettings
 from windowAddPage import WindowAddPage

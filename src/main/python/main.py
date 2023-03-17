@@ -6,8 +6,8 @@ from PyQt5.QtCore import Qt
 import sys
 
 # custom imports
-from _support import *
-from _settings import Settings
+from support import *
+from settings import Settings
 from windowMain import WindowMain
 
 

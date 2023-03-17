@@ -11,7 +11,7 @@ import json
 import os
 
 # custom imports
-from _support import *
+from support import *
 from row import Row
 from frameTime import FrameTime
 from timeLineEdit import TimeLineEdit

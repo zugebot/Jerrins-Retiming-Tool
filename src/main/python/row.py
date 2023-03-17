@@ -6,7 +6,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPalette, QColor, QIcon
 
 # custom imports
-from _support import *
+from support import *
 from timeLineEdit import TimeLineEdit
 from frameTime import FrameTime
 

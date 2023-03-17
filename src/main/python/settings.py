@@ -8,8 +8,8 @@ import platform
 import os
 
 # custom imports
-from _support import *
-import _release
+from support import *
+import release
 
 
 class Settings:
@@ -25,9 +25,9 @@ class Settings:
         self.filename_pages = self.documentFolder + "pages.json"
         self.data: dict = read_json(self.filename_settings)
 
-        self.version = _release.version
-        self.latest_ver = _release.version
-        self.date = _release.date
+        self.version = release.version
+        self.latest_ver = release.version
+        self.date = release.date
 
         self.iconDir: str = self.data.get("icon-dir", "../resources/")
 

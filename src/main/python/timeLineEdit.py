@@ -8,7 +8,7 @@ import json
 import math
 
 # custom imports
-from _support import *
+from support import *
 from frameTime import FrameTime
 
 
