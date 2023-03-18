@@ -43,7 +43,7 @@ Closing it will re-open the main window, or by clicking its open keybind again.
 Pick from different styles your OS offers!
 
 **Theme Color**  
-After changing, requires a restart to show. Green and Cyan are the current only options.
+After changing, requires a restart to show. Choose from Yellow, Green, Cyan and Purple!
 
 **Show Paste Buttons**  
 Toggles the Paste Button's visibility.
