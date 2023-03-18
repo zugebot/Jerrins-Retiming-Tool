@@ -97,7 +97,7 @@ To set up the environment run the following commands
 virtualenv venv
 # append .fish/.csh/.nu/.ps1 depending on your shell
 source venv/bin/activate
-python -m pip install -r requirements.txt
+python -m pip install -r requirements/base.txt
 ```
 
 To start the program run 
