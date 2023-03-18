@@ -77,6 +77,12 @@ class Row:
         [self.setStyle1, self.setStyle2][style]()
 
 
+    def flash(self):
+        self.textTimeStart.flash()
+        self.textTimeEnd.flash()
+        self.textTimeSub.flash()
+        self.textTimeFinal.flash()
+
 
     def setStyle1(self):
         removeChildren(self.container)
@@ -221,7 +227,7 @@ class Row:
             self.textTimeStart.setText(clipboardText)
             return
         text = "Are you sure you want to paste?\nCurrent     : {}\nClipboard : {}"
-        newQuestionBox(self.root,
+        newQuestionBox(self.root.root,
                        message=text.format(self.textTimeStart.text(), clipboardText[:20]),
                        funcYes=self.textTimeStart.setText,
                        argsYes=clipboardText)
@@ -318,6 +324,9 @@ class Row:
             return
 
         value = self.signType * (time2 - time1) + subLoad
+
+        print("value:", value)
+
         totalTime = FrameTime(fps=fps)
         totalTime.setMilliseconds(value)
         time_str = totalTime.getTotalTime()

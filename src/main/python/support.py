@@ -62,6 +62,7 @@ def read_json(filename):
         data = json.loads(file.read())
     return data
 
+
 """
 def getFaviconFromUrl(url):
     response = requests.get(url)
@@ -83,6 +84,7 @@ def getGameNameFromUrl(url):
     return None
 """
 
+
 def addNewAction(menu, text_str="", func=None, shortcut=None):
     action: QAction = menu.addAction(text_str)
     if callable(func):
@@ -92,7 +94,7 @@ def addNewAction(menu, text_str="", func=None, shortcut=None):
     return action
 
 
-def addNewIconAction(root, menu, icon, text_str="", func=None, shortcut=None):
+def addNewIconAction(root, shortcut=None, menu=None, icon=None, text_str="", func=None):
     if isinstance(icon, str):
         icon = QIcon(icon)
     if isinstance(icon, QStyle.StandardPixmap):
@@ -193,7 +195,6 @@ class ClickableLabel(QLabel):
         QDesktopServices.openUrl(QUrl(self.link))
 
 
-
 class AnimatedIconAction(QAction):
     def __init__(self, gif_file, text, parent=None):
         super().__init__(text, parent)
@@ -221,7 +222,6 @@ class AnimatedIconAction(QAction):
         menu.addAction(self)
         if shortcut:
             self.setShortcut(shortcut)
-
 
 
 def placeOnSide(root, newWidth, newHeight, direction):
@@ -252,32 +252,23 @@ def removeLastChild(layout):
 
 def newQObject(
         self=None,
-
         text: str = "",
         temp: str = None,
-
         readOnly: bool = None,
-
         func=None,
-
         width: int = None,
         height: int = None,
-
         spacing: int = None,
         alignment=None,
         sizeConstraint=None,
-
-
         minWidth: int = None,
         maxWidth: int = None,
         minHeight: int = None,
         maxHeight: int = None,
-
         margins: list = None,
-
         styleSheet: str = None,
-        hidden: bool = None):
-
+        hidden: bool = None
+    ):
     self = self()
 
     if text:
@@ -342,11 +333,84 @@ def newQObject(
 
 
 
+def editQObject(
+        self=None,
+        text: str = "",
+        temp: str = None,
+        readOnly: bool = None,
+        func=None,
+        width: int = None,
+        height: int = None,
+        spacing: int = None,
+        alignment=None,
+        sizeConstraint=None,
+        minWidth: int = None,
+        maxWidth: int = None,
+        minHeight: int = None,
+        maxHeight: int = None,
+        margins: list = None,
+        styleSheet: str = None,
+        hidden: bool = None):
 
+    if text:
+        self.setText(text)
+    if temp:
+        self.setPlaceholderText(temp)
 
+    if hidden is not None:
+        if hidden is True:
+            self.setHidden(hidden)
 
+    if isinstance(self, QLayout):
+        if spacing:
+            self.setSpacing(spacing)
+        if alignment:
+            self.setAlignment(alignment)
+        if sizeConstraint:
+            self.setSizeConstraint(sizeConstraint)
 
+    if width is not None:
+        self.setFixedWidth(width)
 
+    if minWidth:
+        self.setMinimumWidth(minWidth)
+    elif width:
+        self.setMinimumWidth(width)
+
+    if maxWidth:
+        self.setMaximumWidth(maxWidth)
+    elif width:
+        self.setMaximumWidth(width)
+
+    if height:
+        self.setFixedHeight(height)
+
+    if minHeight:
+        self.setMinimumHeight(minHeight)
+    elif height:
+        self.setMinimumHeight(height)
+
+    if maxHeight:
+        self.setMaximumHeight(maxHeight)
+    elif height:
+        self.setMaximumHeight(height)
+
+    if margins:
+        self.setContentsMargins(*margins)
+
+    if readOnly is not None:
+        self.setReadOnly(readOnly)
+
+    if styleSheet:
+        self.setStyleSheet(styleSheet)
+
+    if callable(func):
+        if isinstance(self, QLineEdit):
+            self.textChanged[str].connect(func)
+        elif isinstance(self, QPushButton):
+            self.clicked.connect(func)
+
+    return self
 
 
 def makeTable(data,
@@ -447,7 +511,7 @@ def makeTable(data,
     for index, item in enumerate(data):
 
         if show_index:
-            item.insert(0, f"{index+1}.".rjust(show_index_length))
+            item.insert(0, f"{index + 1}.".rjust(show_index_length))
 
         if len(item) < max_size:
             to_add = max_size - len(item)
@@ -470,13 +534,11 @@ def makeTable(data,
 
         max_length_list.append(max_length)
 
-
     # Step 3.3, stretches a line horizontally from vert_line arg
     for vert_index in vert_line:
         # print(data[vert_index])
         # print(len(data), print(len(data[0])), len(max_length_list))
         data[vert_index] = [(i * max_length_list[n])[:max_length_list[n]] for n, i in enumerate(data[vert_index])]
-
 
     # step 3.5
     if debug:
@@ -509,9 +571,9 @@ def makeTable(data,
             is_code_block = seg_index in code
 
             # add the main part of the string
-            if direction == 0: # right
+            if direction == 0:  # right
                 seg_part += f"{str(segment).rjust(max_length_list[seg_index])}"
-            elif direction == 1: # left
+            elif direction == 1:  # left
                 seg_part += f"{str(segment).ljust(max_length_list[seg_index])}"
             elif direction == 2:  # center
                 seg_part += f"{str(segment).center(max_length_list[seg_index])}"
@@ -526,13 +588,12 @@ def makeTable(data,
 
             string += seg_part
 
-
             # add the spacer
             if seg_index < line_segments:
 
                 if seg_index in sep:
                     if data[index][seg_index + 1] is None:
-                        string += " "*len(sep[seg_index])
+                        string += " " * len(sep[seg_index])
                     else:
                         string += f"{sep[seg_index]}"
                 else:
@@ -545,20 +606,3 @@ def makeTable(data,
 
     text = "\n".join(final_string)
     return text
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

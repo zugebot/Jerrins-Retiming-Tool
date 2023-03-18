@@ -1,37 +1,43 @@
 # Jerrin Shirks
-import webbrowser
 
 # native imports
 from PyQt5.QtWidgets import QStyleFactory
-import platform
 import subprocess
+import webbrowser
+import platform
 import os
 
 # custom imports
 from support import *
-
+import release as release
 
 
 class Settings:
-    def __init__(self, version="1.0.0"):
-        self.os_index = 0
+    def __init__(self):
+        self.os_index = 3
         self.documentFolder: str = ""
         self.templateFolder: str = ""
         self.iconFolder: str = ""
+        self.fontSize: int = 0
         self.prepareOS()
 
         self.filename_settings = self.documentFolder + "settings.json"
         self.filename_pages = self.documentFolder + "pages.json"
         self.data: dict = read_json(self.filename_settings)
 
-        self.version = version
-        self.latest_ver = version
+        self.version = release.version
+        self.latest_ver = release.version
+        self.date = release.date
 
         self.iconDir: str = self.data.get("icon-dir", "../resources/")
-        self.latestVersionLink: str = "https://jerrin.org/downloads/retimer/latest.json"
+
+        self.websiteBase = "https://jerrin.org/downloads/retimer/"
+        self.websiteDir = f"{self.websiteBase}download_page.html"
+        self.websiteLatest = f"{self.websiteBase}latest.json"
+
 
         self.url_links = {
-            "website": 'https://jerrin.org',
+            "website": 'https://www.jerrin.org',
             "modhub": 'https://www.speedrun.com/modhub',
             "github": 'https://github.com/zugebot/Speedrun-Retimer',
             "mod-message-formatting": "https://github.com/zugebot/Speedrun-Retimer/blob/main/MOD_FORMAT.md"
@@ -63,13 +69,23 @@ class Settings:
         self.textThemes = {
             "Green": {
                 "text": [78, 228, 78],
-                "anti-text": [180, 0, 0],
+                "anti-text": [200, 30, 30],
                 "highlight": [140, 228, 140]
             },
             "Cyan": {
                 "text": [0, 238, 238],
-                "anti-text": [180, 0, 0],
+                "anti-text": [200, 30, 30],
                 "highlight": [0, 180, 180]
+            },
+            "Yellow": {
+                "text": [255, 213, 36],
+                "anti-text": [200, 30, 30],
+                "highlight": [139, 128, 0]
+            },
+            "Purple": {
+                "text": [163, 134, 217],
+                "anti-text": [200, 30, 30],
+                "highlight": [120, 69, 217]
             }
         }
 
@@ -96,6 +112,11 @@ class Settings:
 
     def getTextTheme(self):
         return self.textThemes[[i for i in self.textThemes][self.get("text-color")]]
+
+
+    def getTextColorTuple(self):
+        theme = self.getTextTheme()
+        return tuple(theme["text"])
 
 
     def getTextColorRGB(self):
@@ -135,8 +156,8 @@ class Settings:
         OS_NAMES = ["Windows", "Linux", "Darwin"]
         if os_name in OS_NAMES:
             self.os_index = OS_NAMES.index(os_name)
-        else:
-            self.os_index = 3
+        # each platform has different default-font sizes (cringe)
+        self.fontSize = {0: 8, 1: 8, 2: 11, 3: 8}[self.os_index]
         # finds the documents folder
         self.documentFolder = {
             0: "C:\\Users\\{}\\Documents\\Speedrun-Retimer\\",
