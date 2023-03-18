@@ -1,6 +1,8 @@
-src/main/python.save.json
+__pycache__
+venv
+builds/
 target/
 .idea/
-appIcons/*
-venv
-__pycache__
+src/main/python.save.json
+src/build.settings/secret.json
+fbs_pro-1.1.9.tar.gz
